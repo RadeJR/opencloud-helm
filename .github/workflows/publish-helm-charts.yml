@@ -52,6 +52,12 @@ jobs:
             echo "CHARTS_VERSION=0.0.0-dev" >> $GITHUB_ENV
           fi
 
+      - name: Set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> $GITHUB_ENV
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
       - name: Package and push OpenCloud chart
         run: |
           # Update Chart.yaml version if we have a tag
@@ -64,11 +70,11 @@ jobs:
           helm package charts/opencloud
           
           # Push to GHCR
-          helm push opencloud-*.tgz oci://ghcr.io/${{ github.repository_owner }}/helm-charts/
+          helm push opencloud-*.tgz oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/
           
           # Verify the pushed chart
           echo "Verifying the pushed chart..."
-          helm pull oci://ghcr.io/${{ github.repository_owner }}/helm-charts/opencloud --version $(helm show chart charts/opencloud | grep version | awk '{print $2}')
+          helm pull oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/opencloud --version $(helm show chart charts/opencloud | grep version | awk '{print $2}')
 
       - name: Package and push OpenCloud Dev chart
         run: |
@@ -82,11 +88,11 @@ jobs:
           helm package charts/opencloud-dev
           
           # Push to GHCR
-          helm push opencloud-dev-*.tgz oci://ghcr.io/${{ github.repository_owner }}/helm-charts/
+          helm push opencloud-dev-*.tgz oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/
           
           # Verify the pushed chart
           echo "Verifying the pushed chart..."
-          helm pull oci://ghcr.io/${{ github.repository_owner }}/helm-charts/opencloud-dev --version $(helm show chart charts/opencloud-dev | grep version | awk '{print $2}')
+          helm pull oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/opencloud-dev --version $(helm show chart charts/opencloud-dev | grep version | awk '{print $2}')
       
       - name: Package and push OpenCloud Microservice chart
         run: |
@@ -100,8 +106,8 @@ jobs:
           helm package charts/opencloud-microservices
           
           # Push to GHCR
-          helm push opencloud-microservices-*.tgz oci://ghcr.io/${{ github.repository_owner }}/helm-charts/
+          helm push opencloud-microservices-*.tgz oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/
           
           # Verify the pushed chart
           echo "Verifying the pushed chart..."
-          helm pull oci://ghcr.io/${{ github.repository_owner }}/helm-charts/opencloud-microservices --version $(helm show chart charts/opencloud-microservices | grep version | awk '{print $2}')          
+          helm pull oci://ghcr.io/${{ env.OWNER_LC }}/helm-charts/opencloud-microservices --version $(helm show chart charts/opencloud-microservices | grep version | awk '{print $2}')          
