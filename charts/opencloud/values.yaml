@@ -485,6 +485,25 @@ opencloud:
     appRegistry: {}
     # CSP configuration
     csp: {}
+    # Proxy configuration
+    # Format: YAML object
+    # This will be rendered as-is into the proxy.yaml configuration file
+    # Example:
+    proxy: {}
+      # role_assignment:
+      #   driver: oidc
+      #   oidc_role_mapper:
+      #     role_claim: roles
+      #     role_mapping:
+      #       - role_name: admin
+      #         claim_value: opencloud-admin
+      #       - role_name: spaceadmin
+      #         claim_value: opencloud-spaceadmin
+      #       - role_name: user
+      #         claim_value: opencloud-user
+      #       - role_name: guest
+      #         claim_value: opencloud-guest
+
     # Banned password list configuration
     # Format: Multi-line string (not YAML array)
     # Use the |- syntax to preserve line breaks
