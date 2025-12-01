@@ -25,7 +25,9 @@ data:
 
   # Proxy configuration
   proxy.yaml: |-
-{{ .Values.opencloud.config.proxy | indent 4 }}
+{{- if .Values.opencloud.config.proxy -}}
+{{ toYaml .Values.opencloud.config.proxy | nindent 4 }}
+{{- end }}
 
   # Banned password list
   banned-password-list.txt: |-
