@@ -14,12 +14,8 @@ spec:
   resources:
     requests:
       storage: {{ .Values.opencloud.persistence.config.size | quote }}
-  {{- if .Values.opencloud.persistence.config.storageClass }}
-  {{- if (eq "-" .Values.opencloud.persistence.config.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: {{ .Values.opencloud.persistence.config.storageClass | quote }}
-  {{- end }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.opencloud.persistence.config.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}
 
@@ -40,12 +36,8 @@ spec:
   resources:
     requests:
       storage: {{ .Values.opencloud.persistence.data.size | quote }}
-  {{- if .Values.opencloud.persistence.data.storageClass }}
-  {{- if (eq "-" .Values.opencloud.persistence.data.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: {{ .Values.opencloud.persistence.data.storageClass | quote }}
-  {{- end }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.opencloud.persistence.data.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}
 
@@ -66,11 +58,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.opencloud.storage.posixfs.persistence.size | quote }}
-  {{- if .Values.opencloud.storage.posixfs.persistence.storageClass }}
-  {{- if (eq "-" .Values.opencloud.storage.posixfs.persistence.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: {{ .Values.opencloud.storage.posixfs.persistence.storageClass | quote }}
-  {{- end }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.opencloud.storage.posixfs.persistence.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}

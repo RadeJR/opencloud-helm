@@ -361,6 +361,8 @@ onlyoffice:
     existingClaim: ""
     # Size of the persistent volume
     size: 2Gi
+    # Storage class
+    storageClass: ""
   # Resources allocation
   resources:
     requests:

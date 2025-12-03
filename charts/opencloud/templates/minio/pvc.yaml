@@ -14,11 +14,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.opencloud.storage.s3.internal.persistence.size | quote }}
-  {{- if .Values.opencloud.storage.s3.internal.persistence.storageClass }}
-  {{- if (eq "-" .Values.opencloud.storage.s3.internal.persistence.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: {{ .Values.opencloud.storage.s3.internal.persistence.storageClass | quote }}
-  {{- end }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.opencloud.storage.s3.internal.persistence.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}

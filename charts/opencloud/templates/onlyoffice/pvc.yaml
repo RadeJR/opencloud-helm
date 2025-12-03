@@ -14,7 +14,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.onlyoffice.persistence.size | default "2Gi" }}
-  {{- if .Values.global.storage.storageClass }}
-  storageClassName: {{ .Values.global.storage.storageClass }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.onlyoffice.persistence.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}

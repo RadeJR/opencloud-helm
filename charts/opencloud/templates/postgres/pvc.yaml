@@ -14,11 +14,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.postgres.persistence.size | quote }}
-  {{- if .Values.postgres.persistence.storageClass }}
-  {{- if (eq "-" .Values.postgres.persistence.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: {{ .Values.postgres.persistence.storageClass | quote }}
-  {{- end }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.postgres.persistence.storageClass "global" .Values.global.storage.storageClass) }}
+  storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}
