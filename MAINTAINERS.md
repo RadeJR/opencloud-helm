@@ -12,6 +12,14 @@ Reviewers have the ability to review PRs and approve them, but do not have merge
 
 ## Team Members
 
+### Current Maintainers (Fork)
+
+| Member | Role | Permissions | Known Platforms/Environments |
+|--------|------|-------------|----------------------------|
+| @RadeJR | Maintainer | Admin | External OIDC providers, Kubernetes |
+
+### Original Maintainers (Archived Upstream)
+
 | Member | Role | Permissions | Known Platforms/Environments |
 |--------|------|-------------|----------------------------|
 | @butonic | Maintainer | Admin | - |
