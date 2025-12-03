@@ -585,7 +585,7 @@ opencloud:
       # gRPC performance settings
       grpc:
         # Maximum received message size in bytes
-        maxReceivedMessageSize: 102400000
+        maxReceivedMessageSize: "102400000"
       
       # Admin user configuration
       admin:
