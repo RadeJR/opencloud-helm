@@ -498,107 +498,156 @@ opencloud:
   excludeServices: []
   
   # Application configuration
-  # These settings map to OpenCloud environment variables
-  # For complex configurations that require file-based config (appRegistry, CSP, proxy),
-  # see the opencloud.config.files section below
-  appConfig:
-    # Logging configuration
-    log:
-      # Log level (debug, info, warn, error)
-      level: info
-      # Enable colored log output
-      color: false
-      # Enable pretty-printed JSON logs
-      pretty: false
+  # Unified configuration for OpenCloud services
+  # Settings are organized by configuration method:
+  #   - env: Settings configured via environment variables
+  #   - files: Settings configured via ConfigMap files (complex YAML/JSON structures)
+  config:
+    # Environment-based configuration
+    # These settings are passed to OpenCloud services as environment variables
+    env:
+      # Logging configuration
+      log:
+        # Log level (debug, info, warn, error)
+        level: info
+        # Enable colored log output
+        color: false
+        # Enable pretty-printed JSON logs
+        pretty: false
+      
+      # Insecure mode (for self-signed certificates)
+      insecure: true
+      
+      # Graph service configuration (roles and user management)
+      graph:
+        # Available roles (comma-separated list or array)
+        # Default OpenCloud roles: Admin, SpaceAdmin, User, Guest, etc.
+        availableRoles:
+          - "b1e2218d-eef8-4d4c-b82d-0f1a1b48f3b5"  # Admin
+          - "a8d5fe5e-96e3-418d-825b-534dbdf22b99"  # SpaceAdmin
+          - "fb6c3e19-e378-47e5-b277-9732f9de6e21"  # User
+          - "58c63c02-1d89-4572-916a-870abc5a1b7d"  # User Light
+          - "2d00ce52-1fc2-4dbc-8b95-a73b73395f5a"  # Guest
+          - "1c996275-f1c9-4e71-abdf-a42f6495e960"  # User Profile
+          - "312c0871-5ef7-4b3a-85b6-0e4074c64049"  # Graph User
+          - "aa97fe03-7980-45ac-9e50-b325749fd7e6"  # Graph Viewer
+        # Assign default user role automatically
+        assignDefaultUserRole: false
+        # Username matching strategy (none, email, username)
+        usernameMatch: "none"
+      
+      # Proxy service configuration
+      proxy:
+        # Use TLS between proxy and OpenCloud services
+        tls: false
+        # Enable basic authentication
+        enableBasicAuth: false
+        # Auto-provision user accounts from OIDC
+        autoprovisionAccounts: true
+        # Role assignment driver (oidc, default)
+        roleAssignmentDriver: "oidc"
+        # OIDC configuration (used when Keycloak or external OIDC is enabled)
+        oidc:
+          # Rewrite OIDC well-known endpoint
+          rewriteWellknown: true
+          # OIDC claim to use for user identification
+          userOidcClaim: "preferred_username"
+          # CS3 claim to use for user identification
+          userCs3Claim: "username"
+          # OIDC claim containing user roles
+          roleAssignmentClaim: "roles"
+          # Access token verification method (jwt, none)
+          accessTokenVerifyMethod: "jwt"
+      
+      # Frontend configuration
+      frontend:
+        # Read-only user attributes (comma-separated)
+        # These attributes are managed by the IDP and cannot be changed in OpenCloud
+        readonlyUserAttributes: "user.onPremisesSamAccountName,user.displayName,user.mail,user.passwordProfile,user.accountEnabled,user.appRoleAssignments"
+      
+      # Web UI configuration
+      web:
+        # OIDC scope to request
+        oidcScope: "openid profile email groups roles"
+      
+      # Sharing configuration
+      sharing:
+        # Require password for public shares
+        publicShareMustHavePassword: false
+      
+      # Password policy configuration
+      passwordPolicy:
+        # Filename of banned passwords list (relative to /etc/opencloud)
+        bannedPasswordsFile: "banned-password-list.txt"
+      
+      # Gateway configuration
+      gateway:
+        # Gateway gRPC address (makes REVA gateway accessible to app drivers)
+        grpcAddr: "0.0.0.0:9142"
+      
+      # Search configuration
+      search:
+        # Extractor type (tika, basic)
+        extractorType: "tika"
+      
+      # gRPC performance settings
+      grpc:
+        # Maximum received message size in bytes
+        maxReceivedMessageSize: 102400000
+      
+      # Admin user configuration
+      admin:
+        # Admin user ID (leave empty for default)
+        userId: ""
     
-    # Insecure mode (for self-signed certificates)
-    insecure: true
-    
-    # Graph service configuration (roles and user management)
-    graph:
-      # Available roles (comma-separated list or array)
-      # Default OpenCloud roles: Admin, SpaceAdmin, User, Guest, etc.
-      availableRoles:
-        - "b1e2218d-eef8-4d4c-b82d-0f1a1b48f3b5"  # Admin
-        - "a8d5fe5e-96e3-418d-825b-534dbdf22b99"  # SpaceAdmin
-        - "fb6c3e19-e378-47e5-b277-9732f9de6e21"  # User
-        - "58c63c02-1d89-4572-916a-870abc5a1b7d"  # User Light
-        - "2d00ce52-1fc2-4dbc-8b95-a73b73395f5a"  # Guest
-        - "1c996275-f1c9-4e71-abdf-a42f6495e960"  # User Profile
-        - "312c0871-5ef7-4b3a-85b6-0e4074c64049"  # Graph User
-        - "aa97fe03-7980-45ac-9e50-b325749fd7e6"  # Graph Viewer
-      # Assign default user role automatically
-      assignDefaultUserRole: false
-      # Username matching strategy (none, email, username)
-      usernameMatch: "none"
-    
-    # Proxy service configuration
-    proxy:
-      # Use TLS between proxy and OpenCloud services
-      tls: false
-      # Enable basic authentication
-      enableBasicAuth: false
-      # Auto-provision user accounts from OIDC
-      autoprovisionAccounts: true
-      # Role assignment driver (oidc, default)
-      roleAssignmentDriver: "oidc"
-      # OIDC configuration (used when Keycloak or external OIDC is enabled)
-      oidc:
-        # Rewrite OIDC well-known endpoint
-        rewriteWellknown: true
-        # OIDC claim to use for user identification
-        userOidcClaim: "preferred_username"
-        # CS3 claim to use for user identification
-        userCs3Claim: "username"
-        # OIDC claim containing user roles
-        roleAssignmentClaim: "roles"
-        # Access token verification method (jwt, none)
-        accessTokenVerifyMethod: "jwt"
-    
-    # Frontend configuration
-    frontend:
-      # Read-only user attributes (comma-separated)
-      # These attributes are managed by the IDP and cannot be changed in OpenCloud
-      readonlyUserAttributes: "user.onPremisesSamAccountName,user.displayName,user.mail,user.passwordProfile,user.accountEnabled,user.appRoleAssignments"
-    
-    # Web UI configuration
-    web:
-      # OIDC scope to request
-      oidcScope: "openid profile email groups roles"
-    
-    # Sharing configuration
-    sharing:
-      # Require password for public shares
-      publicShareMustHavePassword: false
-    
-    # Password policy configuration
-    passwordPolicy:
-      # Filename of banned passwords list (relative to /etc/opencloud)
-      bannedPasswordsFile: "banned-password-list.txt"
-    
-    # Gateway configuration
-    gateway:
-      # Gateway gRPC address (makes REVA gateway accessible to app drivers)
-      grpcAddr: "0.0.0.0:9142"
-    
-    # Search configuration
-    search:
-      # Extractor type (tika, basic)
-      extractorType: "tika"
-    
-    # gRPC performance settings
-    grpc:
-      # Maximum received message size in bytes
-      maxReceivedMessageSize: 102400000
-    
-    # Admin user configuration
-    admin:
-      # Admin user ID (leave empty for default)
-      userId: ""
+    # File-based configurations
+    # These are complex configurations that are better suited as YAML/JSON files
+    # rather than environment variables. They are mounted as ConfigMaps.
+    files:
+      # Web UI theme
+      theme: "owncloud"
+      
+      # App registry configuration
+      # Leave empty to use default from files/opencloud/app-registry.yaml
+      appRegistry: {}
+      
+      # CSP (Content Security Policy) configuration
+      # Leave empty to use default from files/opencloud/csp.yaml.gotmpl
+      # The default template includes dynamic values for domains
+      csp: {}
+      
+      # Proxy configuration (advanced)
+      # Leave empty for default configuration
+      # Format: YAML object that will be rendered as-is into proxy.yaml
+      # Example:
+      proxy: {}
+        # role_assignment:
+        #   oidc_role_mapper:
+        #     role_mapping:
+        #       - role_name: admin
+        #         claim_value: opencloud-admin
+        #       - role_name: spaceadmin
+        #         claim_value: opencloud-spaceadmin
+        #       - role_name: user
+        #         claim_value: opencloud-user
+        #       - role_name: guest
+        #         claim_value: opencloud-guest
+
+      # Banned password list configuration
+      # Format: Multi-line string (not YAML array)
+      # Use the |- syntax to preserve line breaks
+      # Add one password per line - do not use YAML list syntax (no dashes)
+      # Example:
+      #   bannedPasswordList: |-
+      #     password1
+      #     password2
+      #     password3
+      # For very long lists override the file 'files/opencloud/banned-password-list.txt'
+      bannedPasswordList: |-
   
   # Raw environment variable overrides (advanced use)
   # These will be added to the container env section after all generated env vars
-  # Use this for any OpenCloud env vars not covered by appConfig above
+  # Use this for any OpenCloud env vars not covered by config.env above
   extraEnv: []
   # Example:
   # - name: CUSTOM_ENV_VAR
@@ -693,54 +742,6 @@ opencloud:
       storageClass: ""
       # Access mode (ReadWriteOnce or ReadWriteMany for multiple replicas)
       accessMode: ReadWriteOnce
-  # Configuration files
-  # These are complex configurations that are better suited as YAML/JSON files
-  # rather than environment variables. They are mounted as ConfigMaps.
-  config:
-    # Web UI theme
-    theme: "owncloud"
-    
-    # File-based configurations
-    files:
-      # App registry configuration
-      # Leave empty to use default from files/opencloud/app-registry.yaml
-      appRegistry: {}
-      
-      # CSP (Content Security Policy) configuration
-      # Leave empty to use default from files/opencloud/csp.yaml.gotmpl
-      # The default template includes dynamic values for domains
-      csp: {}
-      
-      # Proxy configuration (advanced)
-      # Leave empty for default configuration
-      # Format: YAML object that will be rendered as-is into proxy.yaml
-      # Example:
-      proxy: {}
-        # role_assignment:
-        #   driver: oidc
-        #   oidc_role_mapper:
-        #     role_claim: roles
-        #     role_mapping:
-        #       - role_name: admin
-        #         claim_value: opencloud-admin
-        #       - role_name: spaceadmin
-        #         claim_value: opencloud-spaceadmin
-        #       - role_name: user
-        #         claim_value: opencloud-user
-        #       - role_name: guest
-        #         claim_value: opencloud-guest
-
-      # Banned password list configuration
-      # Format: Multi-line string (not YAML array)
-      # Use the |- syntax to preserve line breaks
-      # Add one password per line - do not use YAML list syntax (no dashes)
-      # Example:
-      #   bannedPasswordList: |-
-      #     password1
-      #     password2
-      #     password3
-      # For very long lists override the file 'files/opencloud/banned-password-list.txt'
-      bannedPasswordList: |-
 
   nats:
     external:

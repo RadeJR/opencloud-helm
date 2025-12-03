@@ -195,15 +195,15 @@ Generate common environment variables for OpenCloud
 
 # Available roles
 - name: GRAPH_AVAILABLE_ROLES
-  value: {{ join "," .Values.opencloud.appConfig.graph.availableRoles | quote }}
+  value: {{ join "," .Values.opencloud.config.env.graph.availableRoles | quote }}
 
 # Log settings
 - name: OC_LOG_LEVEL
-  value: {{ .Values.opencloud.appConfig.log.level | quote }}
+  value: {{ .Values.opencloud.config.env.log.level | quote }}
 - name: OC_LOG_COLOR
-  value: {{ .Values.opencloud.appConfig.log.color | quote }}
+  value: {{ .Values.opencloud.config.env.log.color | quote }}
 - name: OC_LOG_PRETTY
-  value: {{ .Values.opencloud.appConfig.log.pretty | quote }}
+  value: {{ .Values.opencloud.config.env.log.pretty | quote }}
 
 # Enable services that are not started automatically
 {{- with .Values.opencloud.additionalServices }}
@@ -226,17 +226,17 @@ Generate common environment variables for OpenCloud
 
 # Proxy settings
 - name: PROXY_TLS
-  value: {{ .Values.opencloud.appConfig.proxy.tls | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.tls | quote }}
 - name: PROXY_ENABLE_BASIC_AUTH
-  value: {{ .Values.opencloud.appConfig.proxy.enableBasicAuth | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.enableBasicAuth | quote }}
 
 # Gateway settings
 - name: GATEWAY_GRPC_ADDR
-  value: {{ .Values.opencloud.appConfig.gateway.grpcAddr | quote }}
+  value: {{ .Values.opencloud.config.env.gateway.grpcAddr | quote }}
 
 # INSECURE: needed if OpenCloud is using self generated certificates
 - name: OC_INSECURE
-  value: {{ tpl (toString .Values.opencloud.appConfig.insecure) . | quote }}
+  value: {{ tpl (toString .Values.opencloud.config.env.insecure) . | quote }}
 
 # Domain configuration for web extensions
 - name: ONLYOFFICE_DOMAIN
@@ -246,21 +246,21 @@ Generate common environment variables for OpenCloud
 
 # Sharing settings
 - name: OC_SHARING_PUBLIC_SHARE_MUST_HAVE_PASSWORD
-  value: {{ .Values.opencloud.appConfig.sharing.publicShareMustHavePassword | quote }}
+  value: {{ .Values.opencloud.config.env.sharing.publicShareMustHavePassword | quote }}
 
 # Password policy
 - name: OC_PASSWORD_POLICY_BANNED_PASSWORDS_LIST
-  value: {{ .Values.opencloud.appConfig.passwordPolicy.bannedPasswordsFile | quote }}
+  value: {{ .Values.opencloud.config.env.passwordPolicy.bannedPasswordsFile | quote }}
 
 # Search settings
 - name: SEARCH_EXTRACTOR_TYPE
-  value: {{ .Values.opencloud.appConfig.search.extractorType | quote }}
+  value: {{ .Values.opencloud.config.env.search.extractorType | quote }}
 - name: SEARCH_EXTRACTOR_TIKA_TIKA_URL
   value: "http://{{ include "opencloud.tika.fullname" . }}:9998"
 
 # Performance settings
 - name: OC_GRPC_MAX_RECEIVED_MESSAGE_SIZE
-  value: {{ .Values.opencloud.appConfig.grpc.maxReceivedMessageSize | quote }}
+  value: {{ .Values.opencloud.config.env.grpc.maxReceivedMessageSize | quote }}
 
 # CSP configuration
 - name: PROXY_CSP_CONFIG_FILE_LOCATION
@@ -318,20 +318,20 @@ External OIDC takes precedence over internal Keycloak
 # IDP specific configuration
 - name: PROXY_AUTOPROVISION_ACCOUNTS
   {{- if $useExternalOidc }}
-  value: {{ default .Values.opencloud.appConfig.proxy.autoprovisionAccounts .Values.global.oidc.autoProvision | quote }}
+  value: {{ default .Values.opencloud.config.env.proxy.autoprovisionAccounts .Values.global.oidc.autoProvision | quote }}
   {{- else }}
-  value: {{ .Values.opencloud.appConfig.proxy.autoprovisionAccounts | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.autoprovisionAccounts | quote }}
   {{- end }}
 
 # User properties are edited in the IDP, so we have to make them readonly
 - name: FRONTEND_READONLY_USER_ATTRIBUTES
-  value: {{ .Values.opencloud.appConfig.frontend.readonlyUserAttributes | quote }}
+  value: {{ .Values.opencloud.config.env.frontend.readonlyUserAttributes | quote }}
 
 - name: PROXY_ROLE_ASSIGNMENT_DRIVER
   {{- if $useExternalOidc }}
-  value: {{ default .Values.opencloud.appConfig.proxy.roleAssignmentDriver .Values.global.oidc.roleDriver | quote }}
+  value: {{ default .Values.opencloud.config.env.proxy.roleAssignmentDriver .Values.global.oidc.roleDriver | quote }}
   {{- else }}
-  value: {{ .Values.opencloud.appConfig.proxy.roleAssignmentDriver | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.roleAssignmentDriver | quote }}
   {{- end }}
 
 # OIDC Issuer URL
@@ -355,7 +355,7 @@ External OIDC takes precedence over internal Keycloak
   {{- end }}
 
 - name: PROXY_OIDC_REWRITE_WELLKNOWN
-  value: {{ .Values.opencloud.appConfig.proxy.oidc.rewriteWellknown | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.rewriteWellknown | quote }}
 
 # OIDC Client ID
 - name: WEB_OIDC_CLIENT_ID
@@ -364,33 +364,33 @@ External OIDC takes precedence over internal Keycloak
 # User identification claims
 - name: PROXY_USER_OIDC_CLAIM
   {{- if $useExternalOidc }}
-  value: {{ default .Values.opencloud.appConfig.proxy.oidc.userOidcClaim .Values.global.oidc.userClaim | quote }}
+  value: {{ default .Values.opencloud.config.env.proxy.oidc.userOidcClaim .Values.global.oidc.userClaim | quote }}
   {{- else }}
-  value: {{ .Values.opencloud.appConfig.proxy.oidc.userOidcClaim | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.userOidcClaim | quote }}
   {{- end }}
 
 - name: PROXY_USER_CS3_CLAIM
-  value: {{ .Values.opencloud.appConfig.proxy.oidc.userCs3Claim | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.userCs3Claim | quote }}
 
 - name: OC_ADMIN_USER_ID
-  value: {{ .Values.opencloud.appConfig.admin.userId | quote }}
+  value: {{ .Values.opencloud.config.env.admin.userId | quote }}
 
 - name: GRAPH_ASSIGN_DEFAULT_USER_ROLE
-  value: {{ .Values.opencloud.appConfig.graph.assignDefaultUserRole | quote }}
+  value: {{ .Values.opencloud.config.env.graph.assignDefaultUserRole | quote }}
 
 - name: GRAPH_USERNAME_MATCH
-  value: {{ .Values.opencloud.appConfig.graph.usernameMatch | quote }}
+  value: {{ .Values.opencloud.config.env.graph.usernameMatch | quote }}
 
 # Role assignment claim
 - name: PROXY_ROLE_ASSIGNMENT_OIDC_CLAIM
   {{- if $useExternalOidc }}
-  value: {{ default .Values.opencloud.appConfig.proxy.oidc.roleAssignmentClaim .Values.global.oidc.roleClaim | quote }}
+  value: {{ default .Values.opencloud.config.env.proxy.oidc.roleAssignmentClaim .Values.global.oidc.roleClaim | quote }}
   {{- else }}
-  value: {{ .Values.opencloud.appConfig.proxy.oidc.roleAssignmentClaim | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.roleAssignmentClaim | quote }}
   {{- end }}
 
 - name: PROXY_OIDC_ACCESS_TOKEN_VERIFY_METHOD
-  value: {{ .Values.opencloud.appConfig.proxy.oidc.accessTokenVerifyMethod | quote }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.accessTokenVerifyMethod | quote }}
 
 # OIDC metadata/discovery URL
 - name: WEB_OIDC_METADATA_URL
@@ -403,9 +403,9 @@ External OIDC takes precedence over internal Keycloak
 # OIDC scopes
 - name: WEB_OIDC_SCOPE
   {{- if $useExternalOidc }}
-  value: {{ default .Values.opencloud.appConfig.web.oidcScope .Values.global.oidc.scopes | quote }}
+  value: {{ default .Values.opencloud.config.env.web.oidcScope .Values.global.oidc.scopes | quote }}
   {{- else }}
-  value: {{ .Values.opencloud.appConfig.web.oidcScope | quote }}
+  value: {{ .Values.opencloud.config.env.web.oidcScope | quote }}
   {{- end }}
 {{- end }}
 {{- end -}}

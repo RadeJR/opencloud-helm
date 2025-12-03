@@ -313,6 +313,8 @@ This will prepend `my-registry.com/` to all image references in the chart. For e
 
 ### OpenCloud Settings
 
+#### Core Settings
+
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
 | `opencloud.enabled` | Enable OpenCloud | `true` |
@@ -322,14 +324,6 @@ This will prepend `my-registry.com/` to all image references in the chart. For e
 | `opencloud.createDemoUsers` | Create demo users | `false` |
 | `opencloud.additionalServices` | Additional OpenCloud services to start | `[]` |
 | `opencloud.excludeServices` | Services to exclude from starting (automatically managed) | `[]` |
-| `opencloud.appConfig.log.level` | Log level (debug, info, warn, error) | `info` |
-| `opencloud.appConfig.log.color` | Enable colored log output | `false` |
-| `opencloud.appConfig.log.pretty` | Enable pretty-printed JSON logs | `false` |
-| `opencloud.appConfig.insecure` | Insecure mode (for self-signed certificates) | `true` |
-| `opencloud.appConfig.graph.availableRoles` | Available OpenCloud unified role UUIDs | See values.yaml |
-| `opencloud.appConfig.proxy.tls` | Use TLS between proxy and OpenCloud services | `false` |
-| `opencloud.appConfig.proxy.enableBasicAuth` | Enable basic authentication | `false` |
-| `opencloud.appConfig.proxy.autoprovisionAccounts` | Auto-provision user accounts from OIDC | `true` |
 | `opencloud.extraEnv` | Additional environment variables (array) | `[]` |
 | `opencloud.extraEnvFrom` | Additional environment variables from ConfigMaps/Secrets | `[]` |
 | `opencloud.resources` | CPU/Memory resource requests/limits | See values.yaml |
@@ -341,22 +335,79 @@ This will prepend `my-registry.com/` to all image references in the chart. For e
 | `opencloud.terminationGracePeriodSeconds` | Termination grace period | `30` |
 | `opencloud.dnsPolicy` | DNS policy for the pod | `ClusterFirst` |
 | `opencloud.persistence.config.enabled` | Enable config persistence | `true` |
-| `opencloud.persistence.config.size` | Size of config persistent volume | `1Gi` |
+| `opencloud.persistence.config.size` | Size of config persistent volume | `5Gi` |
 | `opencloud.persistence.data.enabled` | Enable data persistence | `true` |
-| `opencloud.persistence.data.size` | Size of data persistent volume | `10Gi` |
+| `opencloud.persistence.data.size` | Size of data persistent volume | `30Gi` |
 
 > 📝 **Note**: The `excludeServices` list is automatically managed. When using external OIDC or Keycloak, the `idp` service is automatically excluded. When using external NATS, the `nats` service is excluded.
-| `opencloud.smtp.enabled` | Enable smtp for opencloud | `false` |
-| `opencloud.smtp.host` | SMTP host | `` |
-| `opencloud.smtp.port` | SMTP port | `587` |
-| `opencloud.smtp.sender` | SMTP sender | `` |
-| `opencloud.smtp.existingSecret` | Name of the existing secret | `` |
-| `opencloud.smtp.username` | SMTP username | `` |
-| `opencloud.smtp.password` | SMTP password | `` |
-| `opencloud.smtp.insecure` | SMTP insecure | `false` |
-| `opencloud.smtp.authentication` | SMTP authentication | `plain` |
-| `opencloud.smtp.encryption` | SMTP encryption | `starttls` |
-| `opencloud.storage.mode` | Choice between s3 and posixfs for user files | `s3` |
+
+#### Environment Configuration (`config.env`)
+
+Application settings configured via environment variables:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.config.env.log.level` | Log level (debug, info, warn, error) | `info` |
+| `opencloud.config.env.log.color` | Enable colored log output | `false` |
+| `opencloud.config.env.log.pretty` | Enable pretty-printed JSON logs | `false` |
+| `opencloud.config.env.insecure` | Insecure mode (for self-signed certificates) | `true` |
+| `opencloud.config.env.graph.availableRoles` | Available OpenCloud unified role UUIDs | See values.yaml |
+| `opencloud.config.env.graph.assignDefaultUserRole` | Auto-assign default user role | `false` |
+| `opencloud.config.env.graph.usernameMatch` | Username matching strategy (none, email, username) | `none` |
+| `opencloud.config.env.proxy.tls` | Use TLS between proxy and OpenCloud services | `false` |
+| `opencloud.config.env.proxy.enableBasicAuth` | Enable basic authentication | `false` |
+| `opencloud.config.env.proxy.autoprovisionAccounts` | Auto-provision user accounts from OIDC | `true` |
+| `opencloud.config.env.proxy.roleAssignmentDriver` | Role assignment driver (oidc, default) | `oidc` |
+| `opencloud.config.env.proxy.oidc.rewriteWellknown` | Rewrite OIDC well-known endpoint | `true` |
+| `opencloud.config.env.proxy.oidc.userOidcClaim` | OIDC claim for user identification | `preferred_username` |
+| `opencloud.config.env.proxy.oidc.userCs3Claim` | CS3 claim for user identification | `username` |
+| `opencloud.config.env.proxy.oidc.roleAssignmentClaim` | OIDC claim containing user roles | `roles` |
+| `opencloud.config.env.proxy.oidc.accessTokenVerifyMethod` | Access token verification method | `jwt` |
+| `opencloud.config.env.frontend.readonlyUserAttributes` | Read-only user attributes (managed by IDP) | See values.yaml |
+| `opencloud.config.env.web.oidcScope` | OIDC scope to request | `openid profile email groups roles` |
+| `opencloud.config.env.sharing.publicShareMustHavePassword` | Require password for public shares | `false` |
+| `opencloud.config.env.passwordPolicy.bannedPasswordsFile` | Banned passwords list filename | `banned-password-list.txt` |
+| `opencloud.config.env.gateway.grpcAddr` | Gateway gRPC address | `0.0.0.0:9142` |
+| `opencloud.config.env.search.extractorType` | Search extractor type (tika, basic) | `tika` |
+| `opencloud.config.env.grpc.maxReceivedMessageSize` | Maximum gRPC message size (bytes) | `102400000` |
+| `opencloud.config.env.admin.userId` | Admin user ID (empty for default) | `""` |
+
+#### File Configuration (`config.files`)
+
+Complex settings configured via ConfigMap files:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.config.files.theme` | Web UI theme name | `owncloud` |
+| `opencloud.config.files.appRegistry` | App registry configuration (YAML object) | `{}` (uses default) |
+| `opencloud.config.files.csp` | Content Security Policy configuration (YAML object) | `{}` (uses default) |
+| `opencloud.config.files.proxy` | Advanced proxy configuration with role mappings (YAML object) | `{}` |
+| `opencloud.config.files.bannedPasswordList` | Multi-line list of banned passwords | `""` (uses default) |
+
+> 💡 **Tip**: For most use cases, the environment configuration (`config.env`) is sufficient. File configuration (`config.files`) is for advanced scenarios requiring complex YAML structures.
+
+#### SMTP Configuration
+
+Email notification settings:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.smtp.enabled` | Enable SMTP for email notifications | `false` |
+| `opencloud.smtp.host` | SMTP server hostname | `""` |
+| `opencloud.smtp.port` | SMTP server port | `587` |
+| `opencloud.smtp.sender` | Email sender address | `""` (auto-generated) |
+| `opencloud.smtp.existingSecret` | Name of existing secret with SMTP credentials | `""` |
+| `opencloud.smtp.username` | SMTP username (ignored if existingSecret is set) | `""` |
+| `opencloud.smtp.password` | SMTP password (ignored if existingSecret is set) | `""` |
+| `opencloud.smtp.insecure` | Allow insecure SMTP connections | `false` |
+| `opencloud.smtp.authentication` | SMTP authentication method (plain, login, none) | `plain` |
+| `opencloud.smtp.encryption` | SMTP encryption (starttls, tls, none) | `starttls` |
+
+### OpenCloud Storage Settings
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.storage.mode` | Storage backend (s3 or posixfs) | `s3` |
 
 ### OpenCloud S3 Storage Settings
 
