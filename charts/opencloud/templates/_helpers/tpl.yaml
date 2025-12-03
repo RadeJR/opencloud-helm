@@ -184,3 +184,351 @@ Return the appropriate apiVersion for ingress
 {{- print "networking.k8s.io/v1beta1" -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Generate common environment variables for OpenCloud
+*/}}
+{{- define "opencloud.env.common" -}}
+# OpenCloud URL
+- name: OC_URL
+  value: "https://{{ include "opencloud.domain" . }}"
+
+# Available roles
+- name: GRAPH_AVAILABLE_ROLES
+  value: {{ join "," .Values.opencloud.config.env.graph.availableRoles | quote }}
+
+# Log settings
+- name: OC_LOG_LEVEL
+  value: {{ .Values.opencloud.config.env.log.level | quote }}
+- name: OC_LOG_COLOR
+  value: {{ .Values.opencloud.config.env.log.color | quote }}
+- name: OC_LOG_PRETTY
+  value: {{ .Values.opencloud.config.env.log.pretty | quote }}
+
+# Enable services that are not started automatically
+{{- with .Values.opencloud.additionalServices }}
+- name: OC_ADD_RUN_SERVICES
+  value: {{ join "," . | quote }}
+{{- end }}
+
+{{- $exclude := .Values.opencloud.excludeServices | default (list) }}
+{{- if .Values.opencloud.nats.external.enabled }}
+  {{- $exclude = append $exclude "nats" }}
+{{- end }}
+{{- $useExternalAuth := or .Values.global.oidc.enabled .Values.keycloak.internal.enabled }}
+{{- if $useExternalAuth }}
+  {{- $exclude = append $exclude "idp" }}
+{{- end }}
+{{- if gt (len $exclude) 0 }}
+- name: OC_EXCLUDE_RUN_SERVICES
+  value: {{ join "," $exclude | quote }}
+{{- end }}
+
+# Proxy settings
+- name: PROXY_TLS
+  value: {{ .Values.opencloud.config.env.proxy.tls | quote }}
+- name: PROXY_ENABLE_BASIC_AUTH
+  {{- $oidcEnabled := or .Values.global.oidc.enabled .Values.keycloak.internal.enabled }}
+  {{- if $oidcEnabled }}
+  value: "false"
+  {{- else }}
+  value: {{ .Values.opencloud.config.env.proxy.enableBasicAuth | quote }}
+  {{- end }}
+
+# Gateway settings
+- name: GATEWAY_GRPC_ADDR
+  value: {{ .Values.opencloud.config.env.gateway.grpcAddr | quote }}
+
+# INSECURE: needed if OpenCloud is using self generated certificates
+- name: OC_INSECURE
+  value: {{ tpl (toString .Values.opencloud.config.env.insecure) . | quote }}
+
+# Domain configuration for web extensions
+- name: ONLYOFFICE_DOMAIN
+  value: "{{ .Values.global.domain.onlyoffice }}"
+- name: COMPANION_DOMAIN
+  value: "{{ .Values.global.domain.companion }}"
+
+# Sharing settings
+- name: OC_SHARING_PUBLIC_SHARE_MUST_HAVE_PASSWORD
+  value: {{ .Values.opencloud.config.env.sharing.publicShareMustHavePassword | quote }}
+
+# Password policy
+- name: OC_PASSWORD_POLICY_BANNED_PASSWORDS_LIST
+  value: {{ .Values.opencloud.config.env.passwordPolicy.bannedPasswordsFile | quote }}
+
+# Search settings
+- name: SEARCH_EXTRACTOR_TYPE
+{{- if and (eq .Values.opencloud.config.env.search.extractorType "tika") (not .Values.tika.enabled) }}
+  value: "basic"
+{{- else }}
+  value: {{ .Values.opencloud.config.env.search.extractorType | quote }}
+{{- end }}
+{{- if .Values.tika.enabled }}
+- name: SEARCH_EXTRACTOR_TIKA_TIKA_URL
+  value: "http://{{ include "opencloud.tika.fullname" . }}:9998"
+{{- end }}
+
+# Performance settings
+- name: OC_GRPC_MAX_RECEIVED_MESSAGE_SIZE
+  value: {{ .Values.opencloud.config.env.grpc.maxReceivedMessageSize | quote }}
+
+# CSP configuration
+- name: PROXY_CSP_CONFIG_FILE_LOCATION
+  value: "/etc/opencloud/csp.yaml"
+{{- end -}}
+
+{{/*
+Generate SMTP environment variables for OpenCloud
+*/}}
+{{- define "opencloud.env.smtp" -}}
+{{- if .Values.opencloud.smtp.enabled }}
+- name: NOTIFICATIONS_SMTP_HOST
+  value: "{{ .Values.opencloud.smtp.host }}"
+- name: NOTIFICATIONS_SMTP_PORT
+  value: "{{ .Values.opencloud.smtp.port }}"
+- name: NOTIFICATIONS_SMTP_SENDER
+  value: "{{ .Values.opencloud.smtp.sender | default (printf "OpenCloud notifications <notifications@%s>" (include "opencloud.domain" .)) }}"
+- name: NOTIFICATIONS_SMTP_USERNAME
+  valueFrom:
+    secretKeyRef:
+      name: {{- if .Values.opencloud.smtp.existingSecret }}
+              {{ .Values.opencloud.smtp.existingSecret }}
+            {{- else }}
+              {{ include "opencloud.opencloud.fullname" . }}-smtp
+            {{- end }}
+      key: smtpUser
+- name: NOTIFICATIONS_SMTP_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{- if .Values.opencloud.smtp.existingSecret }}
+              {{ .Values.opencloud.smtp.existingSecret }}
+            {{- else }}
+              {{ include "opencloud.opencloud.fullname" . }}-smtp
+            {{- end }}
+      key: smtpPassword
+- name: NOTIFICATIONS_SMTP_INSECURE
+  value: {{ tpl (toString .Values.opencloud.smtp.insecure) . | quote }}
+- name: NOTIFICATIONS_SMTP_AUTHENTICATION
+  value: "{{ .Values.opencloud.smtp.authentication }}"
+- name: NOTIFICATIONS_SMTP_ENCRYPTION
+  value: "{{ .Values.opencloud.smtp.encryption }}"
+{{- end }}
+{{- end -}}
+
+{{/*
+Generate OIDC environment variables for OpenCloud
+Supports both external OIDC providers and internal Keycloak deployment
+External OIDC takes precedence over internal Keycloak
+*/}}
+{{- define "opencloud.env.oidc" -}}
+{{- $oidcEnabled := or .Values.global.oidc.enabled .Values.keycloak.internal.enabled }}
+{{- if $oidcEnabled }}
+{{- $useExternalOidc := .Values.global.oidc.enabled }}
+
+# IDP specific configuration
+- name: PROXY_AUTOPROVISION_ACCOUNTS
+  value: {{ .Values.opencloud.config.env.proxy.autoprovisionAccounts | quote }}
+
+# User properties are edited in the IDP, so we have to make them readonly
+- name: FRONTEND_READONLY_USER_ATTRIBUTES
+  value: {{ .Values.opencloud.config.env.frontend.readonlyUserAttributes | quote }}
+
+- name: PROXY_ROLE_ASSIGNMENT_DRIVER
+  value: {{ .Values.opencloud.config.env.proxy.roleAssignmentDriver | quote }}
+
+# OIDC Issuer URL
+- name: OC_OIDC_ISSUER
+  {{- if $useExternalOidc }}
+  value: {{ required "global.oidc.issuer is required when global.oidc.enabled is true" .Values.global.oidc.issuer | quote }}
+  {{- else }}
+  value: {{ printf "https://%s/realms/%s" (include "opencloud.keycloak.domain" .) .Values.keycloak.internal.realm | quote }}
+  {{- end }}
+
+# Account management URL
+- name: WEB_OPTION_ACCOUNT_EDIT_LINK_HREF
+  {{- if $useExternalOidc }}
+  value: {{ .Values.global.oidc.accountUrl | default "" | quote }}
+  {{- else }}
+  value: {{ printf "https://%s/realms/%s/account" (include "opencloud.keycloak.domain" .) .Values.keycloak.internal.realm | quote }}
+  {{- end }}
+
+- name: PROXY_OIDC_REWRITE_WELLKNOWN
+  value: {{ .Values.opencloud.config.env.proxy.oidc.rewriteWellknown | quote }}
+
+# OIDC Client ID
+- name: WEB_OIDC_CLIENT_ID
+  {{- if $useExternalOidc }}
+  value: {{ required "global.oidc.clientId is required when global.oidc.enabled is true" .Values.global.oidc.clientId | quote }}
+  {{- else }}
+  value: "web"
+  {{- end }}
+
+# User identification claims
+- name: PROXY_USER_OIDC_CLAIM
+  {{- if $useExternalOidc }}
+  value: {{ default .Values.opencloud.config.env.proxy.oidc.userOidcClaim .Values.global.oidc.userClaim | quote }}
+  {{- else }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.userOidcClaim | quote }}
+  {{- end }}
+
+- name: PROXY_USER_CS3_CLAIM
+  value: {{ .Values.opencloud.config.env.proxy.oidc.userCs3Claim | quote }}
+
+- name: OC_ADMIN_USER_ID
+  value: {{ .Values.opencloud.config.env.admin.userId | quote }}
+
+- name: GRAPH_ASSIGN_DEFAULT_USER_ROLE
+  value: {{ .Values.opencloud.config.env.graph.assignDefaultUserRole | quote }}
+
+- name: GRAPH_USERNAME_MATCH
+  value: {{ .Values.opencloud.config.env.graph.usernameMatch | quote }}
+
+# Role assignment claim
+- name: PROXY_ROLE_ASSIGNMENT_OIDC_CLAIM
+  {{- if $useExternalOidc }}
+  value: {{ default .Values.opencloud.config.env.proxy.oidc.roleAssignmentClaim .Values.global.oidc.roleClaim | quote }}
+  {{- else }}
+  value: {{ .Values.opencloud.config.env.proxy.oidc.roleAssignmentClaim | quote }}
+  {{- end }}
+
+- name: PROXY_OIDC_ACCESS_TOKEN_VERIFY_METHOD
+  value: {{ .Values.opencloud.config.env.proxy.oidc.accessTokenVerifyMethod | quote }}
+
+# OIDC metadata/discovery URL
+- name: WEB_OIDC_METADATA_URL
+  {{- if $useExternalOidc }}
+  value: {{ printf "%s/.well-known/openid-configuration" .Values.global.oidc.issuer | quote }}
+  {{- else }}
+  value: {{ printf "https://%s/realms/%s/.well-known/openid-configuration" (include "opencloud.keycloak.domain" .) .Values.keycloak.internal.realm | quote }}
+  {{- end }}
+
+# OIDC scopes
+- name: WEB_OIDC_SCOPE
+  {{- if $useExternalOidc }}
+  value: {{ default .Values.opencloud.config.env.web.oidcScope .Values.global.oidc.scopes | quote }}
+  {{- else }}
+  value: {{ .Values.opencloud.config.env.web.oidcScope | quote }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Generate admin and demo user environment variables
+*/}}
+{{- define "opencloud.env.admin" -}}
+# Admin user password
+- name: IDM_ADMIN_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{- if .Values.opencloud.existingSecret }}
+              {{ .Values.opencloud.existingSecret }}
+            {{- else }}
+              {{ include "opencloud.opencloud.fullname" . }}
+            {{- end }}
+      key: adminPassword
+# Demo users
+- name: IDM_CREATE_DEMO_USERS
+  value: {{ .Values.opencloud.createDemoUsers | quote }}
+{{- end -}}
+
+{{/*
+Generate NATS environment variables
+*/}}
+{{- define "opencloud.env.nats" -}}
+{{- if .Values.opencloud.nats.external.enabled }}
+# Use the external nats as the service registry
+- name: MICRO_REGISTRY_ADDRESS
+  value: {{ .Values.opencloud.nats.external.endpoint | quote }}
+# Use the external nats as the cache and persistent store
+- name: OC_CACHE_STORE_NODES
+  value: {{ .Values.opencloud.nats.external.endpoint | quote }}
+- name: OC_PERSISTENT_STORE_NODES
+  value: {{ .Values.opencloud.nats.external.endpoint | quote }}
+# Use the external nats as the messaging system
+- name: OC_EVENTS_ENDPOINT
+  value: {{ .Values.opencloud.nats.external.endpoint | quote }}
+- name: OC_EVENTS_CLUSTER
+  value: {{ .Values.opencloud.nats.external.cluster | quote }}
+- name: OC_EVENTS_ENABLE_TLS
+  value: {{ .Values.opencloud.nats.external.tls.enabled | quote }}
+- name: OC_EVENTS_TLS_INSECURE
+  value: {{ .Values.opencloud.nats.external.tls.insecure | quote }}
+{{- if not .Values.opencloud.nats.external.tls.certTrusted }}
+- name: OC_EVENTS_TLS_ROOT_CA_CERTIFICATE
+  value: /etc/opencloud/nats-ca/ca.crt
+{{- end }}
+{{- else }}
+- name: MICRO_REGISTRY_ADDRESS
+  value: "127.0.0.1:9233"
+# Make the registry available to the app provider containers
+- name: NATS_NATS_HOST
+  value: "0.0.0.0"
+- name: NATS_NATS_PORT
+  value: "9233"
+{{- end }}
+{{- end -}}
+
+{{/*
+Generate storage environment variables
+*/}}
+{{- define "opencloud.env.storage" -}}
+# Storage configuration
+# Always use decomposeds3 for user storage and decomposed for system storage
+- name: STORAGE_USERS_DRIVER
+{{- if eq .Values.opencloud.storage.mode "posixfs" }}
+  value: "posix"
+{{- else }}
+  value: "decomposeds3"
+{{- end }}
+- name: STORAGE_SYSTEM_DRIVER
+  value: "decomposed"
+
+{{- if eq .Values.opencloud.storage.mode "posixfs" }}
+- name: STORAGE_USERS_POSIX_ROOT
+  value: {{ .Values.opencloud.storage.posixfs.rootPath | quote }}
+- name: STORAGE_USERS_ID_CACHE_STORE
+  value: {{ .Values.opencloud.storage.posixfs.idCacheStore | quote }}
+# S3 storage configuration
+{{- else if and (eq .Values.opencloud.storage.mode "s3") .Values.opencloud.storage.s3.external.enabled }}
+# External S3 storage
+- name: STORAGE_USERS_DECOMPOSEDS3_ENDPOINT
+  value: {{ .Values.opencloud.storage.s3.external.endpoint | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_REGION
+  value: {{ .Values.opencloud.storage.s3.external.region | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_BUCKET
+  value: {{ .Values.opencloud.storage.s3.external.bucket | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_CREATE_BUCKET
+  value: {{ .Values.opencloud.storage.s3.external.createBucket | default true | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.opencloud.storage.s3.external.existingSecret | default (printf "%s-s3" (include "opencloud.opencloud.fullname" .)) }}
+      key: accessKey
+- name: STORAGE_USERS_DECOMPOSEDS3_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.opencloud.storage.s3.external.existingSecret | default (printf "%s-s3" (include "opencloud.opencloud.fullname" .)) }}
+      key: secretKey
+{{- else }}
+# Internal S3 (MinIO) storage
+- name: STORAGE_USERS_DECOMPOSEDS3_ENDPOINT
+  value: {{ printf "http://%s:9000" (include "opencloud.minio.fullname" .) | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_REGION
+  value: {{ .Values.opencloud.storage.s3.internal.region | default "default" | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_BUCKET
+  value: {{ .Values.opencloud.storage.s3.internal.bucketName | quote }}
+- name: STORAGE_USERS_DECOMPOSEDS3_CREATE_BUCKET
+  value: "true"
+- name: STORAGE_USERS_DECOMPOSEDS3_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.opencloud.storage.s3.internal.existingSecret | default (include "opencloud.minio.fullname" .) }}
+      key: rootUser
+- name: STORAGE_USERS_DECOMPOSEDS3_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.opencloud.storage.s3.internal.existingSecret | default (include "opencloud.minio.fullname" .) }}
+      key: rootPassword
+{{- end }}
+{{- end -}}

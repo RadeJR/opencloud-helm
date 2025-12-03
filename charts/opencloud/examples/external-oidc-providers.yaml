@@ -1,0 +1,209 @@
+# =====================================================================
+# External OIDC Provider Examples
+# =====================================================================
+# This file contains example configurations for using OpenCloud with
+# various external OIDC providers instead of the built-in Keycloak.
+#
+# To use an external OIDC provider:
+# 1. Set global.oidc.enabled=true
+# 2. Configure the required OIDC settings (issuer, clientId, etc.)
+# 3. Disable internal Keycloak: keycloak.internal.enabled=false
+# 4. Apply using: helm install opencloud . -f examples/external-oidc-providers.yaml
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# Example 1: Auth0
+# ---------------------------------------------------------------------
+# auth0:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://yourdomain.auth0.com"
+#       clientId: "your-client-id"
+#       accountUrl: "https://yourdomain.auth0.com/account"
+#       scopes: "openid profile email"
+#       userClaim: "email"
+#       roleClaim: "https://yourdomain.com/roles"  # Custom namespace claim
+#       autoProvision: true
+#       roleDriver: "oidc"
+#   
+#   # Disable internal Keycloak
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 2: Okta
+# ---------------------------------------------------------------------
+# okta:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://yourorg.okta.com/oauth2/default"
+#       clientId: "your-client-id"
+#       accountUrl: "https://yourorg.okta.com/enduser/settings"
+#       scopes: "openid profile email groups"
+#       userClaim: "preferred_username"
+#       roleClaim: "groups"
+#       autoProvision: true
+#       roleDriver: "oidc"
+#   
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 3: Azure AD (Microsoft Entra ID)
+# ---------------------------------------------------------------------
+# azure-ad:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://login.microsoftonline.com/{tenant-id}/v2.0"
+#       clientId: "your-application-id"
+#       accountUrl: "https://myaccount.microsoft.com"
+#       scopes: "openid profile email"
+#       userClaim: "preferred_username"
+#       roleClaim: "roles"
+#       autoProvision: true
+#       roleDriver: "oidc"
+#   
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 4: Google Identity Platform
+# ---------------------------------------------------------------------
+# google:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://accounts.google.com"
+#       clientId: "your-client-id.apps.googleusercontent.com"
+#       accountUrl: "https://myaccount.google.com"
+#       scopes: "openid profile email"
+#       userClaim: "email"
+#       # Note: Google doesn't provide role claims by default
+#       autoProvision: true
+#       roleDriver: "default"  # Use static role assignment
+#   
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 5: External Keycloak Instance
+# ---------------------------------------------------------------------
+# external-keycloak:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://keycloak.example.com/realms/myrealm"
+#       clientId: "opencloud"
+#       accountUrl: "https://keycloak.example.com/realms/myrealm/account"
+#       scopes: "openid profile email groups roles"
+#       userClaim: "preferred_username"
+#       roleClaim: "roles"
+#       autoProvision: true
+#       roleDriver: "oidc"
+#   
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 6: GitLab
+# ---------------------------------------------------------------------
+# gitlab:
+#   global:
+#     oidc:
+#       enabled: true
+#       issuer: "https://gitlab.com"
+#       clientId: "your-application-id"
+#       accountUrl: "https://gitlab.com/-/profile"
+#       scopes: "openid profile email"
+#       userClaim: "email"
+#       roleClaim: "groups"
+#       autoProvision: true
+#       roleDriver: "oidc"
+#   
+#   keycloak:
+#     internal:
+#       enabled: false
+
+# ---------------------------------------------------------------------
+# Example 7: Generic OIDC Provider with All Options
+# ---------------------------------------------------------------------
+generic-oidc:
+  global:
+    oidc:
+      # Enable external OIDC provider
+      enabled: true
+      
+      # OIDC issuer URL (required)
+      issuer: "https://oidc.example.com"
+      
+      # Client ID registered with OIDC provider (required)
+      clientId: "opencloud-client"
+      
+      # Account management URL (optional)
+      accountUrl: "https://oidc.example.com/account"
+      
+      # OAuth scopes to request (optional, defaults to internal value)
+      scopes: "openid profile email groups roles"
+      
+      # Claim to identify users (optional, defaults to "preferred_username")
+      userClaim: "preferred_username"
+      
+      # Auto-provision accounts on first login (optional, defaults to true)
+      autoProvision: true
+      
+      # Role assignment driver (optional, defaults to "oidc")
+      # Options: "oidc" (from token claims) or "default" (static roles)
+      roleDriver: "oidc"
+      
+      # Claim containing user roles (optional, defaults to "roles")
+      roleClaim: "roles"
+  
+  # Disable internal Keycloak when using external OIDC
+  keycloak:
+    internal:
+      enabled: false
+
+# ---------------------------------------------------------------------
+# Example 8: Using Built-in Keycloak (Default Behavior)
+# ---------------------------------------------------------------------
+# If you want to use the built-in Keycloak, simply don't enable
+# external OIDC. This is the default behavior:
+#
+# keycloak:
+#   internal:
+#     enabled: true
+#     realm: "openCloud"
+#     adminUser: "admin"
+#     adminPassword: "changeme"
+#
+# global:
+#   oidc:
+#     enabled: false  # or just omit this section
+#     clientId: "web"
+
+# ---------------------------------------------------------------------
+# OIDC Provider Comparison
+# ---------------------------------------------------------------------
+# 
+# Provider     | User Claim           | Role Claim        | Auto-Provision
+# -------------|----------------------|-------------------|---------------
+# Auth0        | email                | custom namespace  | ✓
+# Okta         | preferred_username   | groups            | ✓
+# Azure AD     | preferred_username   | roles             | ✓
+# Google       | email                | N/A               | ✓
+# Keycloak     | preferred_username   | roles             | ✓
+# GitLab       | email                | groups            | ✓
+#
+# Notes:
+# - Some providers require additional configuration to include role/group
+#   claims in tokens
+# - Account URLs vary by provider; check provider documentation
+# - Custom claim namespaces (like Auth0) may require additional quotes

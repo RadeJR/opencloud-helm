@@ -13,6 +13,9 @@ Welcome to the **OpenCloud Helm Charts** repository! This repository is intended
 - [Installing the Helm Charts](#-installing-the-helm-charts)
 - [Architecture](#architecture)
   - [Component Interaction Diagram](#component-interaction-diagram)
+- [Authentication](#authentication)
+  - [Authentication Modes](#authentication-modes)
+  - [External OIDC Providers](#external-oidc-providers)
 - [Configuration](#configuration)
   - [Global Settings](#global-settings)
   - [Image Settings](#image-settings)
@@ -104,6 +107,57 @@ This Helm chart deploys the following components:
 9. **RabbitMQ** - Message queue for OnlyOffice
 
 All services are deployed with `ClusterIP` type, which means they are only accessible within the Kubernetes cluster. You need to configure your own ingress controller (e.g., Cilium Gateway API) to expose the services externally.
+
+## Authentication
+
+OpenCloud supports three authentication modes, providing flexibility for different deployment scenarios.
+
+### Authentication Modes
+
+1. **Built-in Keycloak** (default) - Deploys and configures Keycloak automatically
+   - Fully managed authentication system
+   - Pre-configured with OpenCloud realm
+   - Suitable for standalone deployments
+
+2. **External OIDC Provider** - Use Auth0, Okta, Azure AD, Google, or any OIDC-compliant provider
+   - Provider-agnostic configuration
+   - Integration with existing identity infrastructure
+   - Detailed configuration options for claims, scopes, and role mapping
+
+3. **Internal IDP** - Use OpenCloud's built-in identity provider
+   - Activated when both Keycloak and external OIDC are disabled
+   - Lightweight authentication for testing/development
+   - No external dependencies
+
+### External OIDC Providers
+
+For detailed information on configuring external OIDC providers, including provider-specific examples and troubleshooting, see:
+
+📘 **[External OIDC Provider Configuration Guide](docs/EXTERNAL-OIDC.md)**
+
+The guide includes ready-to-use configurations for:
+- Auth0
+- Okta
+- Azure AD (Microsoft Entra ID)
+- Google Identity Platform
+- GitLab
+- External Keycloak instances
+
+Quick example using Auth0:
+
+```yaml
+global:
+  oidc:
+    enabled: true
+    issuer: "https://yourdomain.auth0.com"
+    clientId: "your-client-id"
+    userClaim: "email"
+    roleClaim: "https://yourdomain.com/roles"
+
+keycloak:
+  internal:
+    enabled: false
+```
 
 ### Component Interaction Diagram
 
@@ -224,11 +278,20 @@ This will prepend `my-registry.com/` to all image references in the chart. For e
 | `global.domain.wopi` | Domain for WOPI server | `wopiserver.opencloud.test` |
 | `global.tls.enabled` | Enable TLS (set to false when using gateway TLS termination externally) | `false` |
 | `global.tls.secretName` | secretName for TLS certificate | `""` |
-| `global.oidc.issuer` | OpenID Connect Issuer URL | `""` generated to use the internal keycloak|
-| `global.oidc.clientId` | OpenID Connect Client ID used by OpenCloud | `"web"` |
+| `global.oidc.enabled` | Enable external OIDC provider (disables automatic Keycloak configuration) | `false` |
+| `global.oidc.issuer` | OIDC provider base URL (required when oidc.enabled=true) | `""` |
+| `global.oidc.clientId` | OIDC client/application ID | `"web"` |
+| `global.oidc.accountUrl` | URL for user account management (optional) | `""` |
+| `global.oidc.scopes` | OAuth 2.0 scopes to request (optional) | `""` |
+| `global.oidc.userClaim` | Token claim for user identification (optional) | `""` |
+| `global.oidc.autoProvision` | Auto-create users on first login (optional) | `true` |
+| `global.oidc.roleDriver` | Role assignment method: "oidc" or "default" (optional) | `""` |
+| `global.oidc.roleClaim` | Token claim containing user roles (optional) | `""` |
 | `global.storage.storageClass` | Storage class for persistent volumes | `""` |
 | `global.image.registry` | Global registry override for all images (e.g., `my-registry.com`) | `""` |
 | `global.image.pullPolicy` | Global pull policy override for all images (`Always`, `IfNotPresent`, `Never`) | `""` |
+
+> 💡 **Note on OIDC Configuration**: When using external OIDC (`global.oidc.enabled: true`), the internal Keycloak's automatic configuration is bypassed. See the [External OIDC Provider Configuration Guide](docs/EXTERNAL-OIDC.md) for detailed setup instructions.
 
 ### Image Settings
 
@@ -240,35 +303,111 @@ This will prepend `my-registry.com/` to all image references in the chart. For e
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `image.pullSecrets` | Image pull secrets | `[]` |
 
+### Service Account Settings
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `serviceAccount.create` | Specifies whether a service account should be created | `true` |
+| `serviceAccount.annotations` | Annotations to add to the service account | `{}` |
+| `serviceAccount.name` | The name of the service account to use (auto-generated if not set) | `""` |
+
 ### OpenCloud Settings
+
+#### Core Settings
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
 | `opencloud.enabled` | Enable OpenCloud | `true` |
 | `opencloud.replicas` | Number of replicas (Note: When using multiple replicas, persistence should be disabled or use a storage class that supports ReadWriteMany access mode) | `1` |
-| `opencloud.logLevel` | Log level | `info` |
-| `opencloud.logColor` | Enable log color | `false` |
-| `opencloud.logPretty` | Enable pretty logging | `false` |
-| `opencloud.insecure` | Insecure mode (for self-signed certificates) | `true` |
-| `opencloud.existingSecret` | Name of the existing secret | `` |
+| `opencloud.existingSecret` | Name of the existing secret for admin credentials | `""` |
 | `opencloud.adminPassword` | Admin password | `admin` |
 | `opencloud.createDemoUsers` | Create demo users | `false` |
-| `opencloud.resources` | CPU/Memory resource requests/limits | `{}` |
-| `opencloud.persistence.enabled` | Enable persistence | `true` |
-| `opencloud.persistence.size` | Size of the persistent volume | `10Gi` |
-| `opencloud.persistence.storageClass` | Storage class | `""` |
-| `opencloud.persistence.accessMode` | Access mode | `ReadWriteOnce` |
-| `opencloud.smtp.enabled` | Enable smtp for opencloud | `false` |
-| `opencloud.smtp.host` | SMTP host | `` |
-| `opencloud.smtp.port` | SMTP port | `587` |
-| `opencloud.smtp.sender` | SMTP sender | `` |
-| `opencloud.smtp.existingSecret` | Name of the existing secret | `` |
-| `opencloud.smtp.username` | SMTP username | `` |
-| `opencloud.smtp.password` | SMTP password | `` |
-| `opencloud.smtp.insecure` | SMTP insecure | `false` |
-| `opencloud.smtp.authentication` | SMTP authentication | `plain` |
-| `opencloud.smtp.encryption` | SMTP encryption | `starttls` |
-| `opencloud.storage.mode` | Choice between s3 and posixfs for user files | `s3` |
+| `opencloud.additionalServices` | Additional OpenCloud services to start | `[]` |
+| `opencloud.excludeServices` | Services to exclude from starting (automatically managed) | `[]` |
+| `opencloud.extraEnv` | Additional environment variables (array) | `[]` |
+| `opencloud.extraEnvFrom` | Additional environment variables from ConfigMaps/Secrets | `[]` |
+| `opencloud.resources` | CPU/Memory resource requests/limits | See values.yaml |
+| `opencloud.nodeSelector` | Node selector for pod assignment | `{}` |
+| `opencloud.tolerations` | Tolerations for pod assignment | `[]` |
+| `opencloud.affinity` | Affinity rules for pod assignment | `{}` |
+| `opencloud.podAnnotations` | Additional pod annotations | `{}` |
+| `opencloud.podLabels` | Additional pod labels | `{}` |
+| `opencloud.terminationGracePeriodSeconds` | Termination grace period | `30` |
+| `opencloud.dnsPolicy` | DNS policy for the pod | `ClusterFirst` |
+| `opencloud.persistence.config.enabled` | Enable config persistence | `true` |
+| `opencloud.persistence.config.size` | Size of config persistent volume | `5Gi` |
+| `opencloud.persistence.data.enabled` | Enable data persistence | `true` |
+| `opencloud.persistence.data.size` | Size of data persistent volume | `30Gi` |
+
+> 📝 **Note**: The `excludeServices` list is automatically managed. When using external OIDC or Keycloak, the `idp` service is automatically excluded. When using external NATS, the `nats` service is excluded.
+
+#### Environment Configuration (`config.env`)
+
+Application settings configured via environment variables:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.config.env.log.level` | Log level (debug, info, warn, error) | `info` |
+| `opencloud.config.env.log.color` | Enable colored log output | `false` |
+| `opencloud.config.env.log.pretty` | Enable pretty-printed JSON logs | `false` |
+| `opencloud.config.env.insecure` | Insecure mode (for self-signed certificates) | `true` |
+| `opencloud.config.env.graph.availableRoles` | Available OpenCloud unified role UUIDs | See values.yaml |
+| `opencloud.config.env.graph.assignDefaultUserRole` | Auto-assign default user role | `false` |
+| `opencloud.config.env.graph.usernameMatch` | Username matching strategy (none, email, username) | `none` |
+| `opencloud.config.env.proxy.tls` | Use TLS between proxy and OpenCloud services | `false` |
+| `opencloud.config.env.proxy.enableBasicAuth` | Enable basic authentication | `false` |
+| `opencloud.config.env.proxy.autoprovisionAccounts` | Auto-provision user accounts from OIDC | `true` |
+| `opencloud.config.env.proxy.roleAssignmentDriver` | Role assignment driver (oidc, default) | `oidc` |
+| `opencloud.config.env.proxy.oidc.rewriteWellknown` | Rewrite OIDC well-known endpoint | `true` |
+| `opencloud.config.env.proxy.oidc.userOidcClaim` | OIDC claim for user identification | `preferred_username` |
+| `opencloud.config.env.proxy.oidc.userCs3Claim` | CS3 claim for user identification | `username` |
+| `opencloud.config.env.proxy.oidc.roleAssignmentClaim` | OIDC claim containing user roles | `roles` |
+| `opencloud.config.env.proxy.oidc.accessTokenVerifyMethod` | Access token verification method | `jwt` |
+| `opencloud.config.env.frontend.readonlyUserAttributes` | Read-only user attributes (managed by IDP) | See values.yaml |
+| `opencloud.config.env.web.oidcScope` | OIDC scope to request | `openid profile email groups roles` |
+| `opencloud.config.env.sharing.publicShareMustHavePassword` | Require password for public shares | `false` |
+| `opencloud.config.env.passwordPolicy.bannedPasswordsFile` | Banned passwords list filename | `banned-password-list.txt` |
+| `opencloud.config.env.gateway.grpcAddr` | Gateway gRPC address | `0.0.0.0:9142` |
+| `opencloud.config.env.search.extractorType` | Search extractor type (tika, basic) | `tika` |
+| `opencloud.config.env.grpc.maxReceivedMessageSize` | Maximum gRPC message size (bytes) | `102400000` |
+| `opencloud.config.env.admin.userId` | Admin user ID (empty for default) | `""` |
+
+#### File Configuration (`config.files`)
+
+Complex settings configured via ConfigMap files:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.config.files.theme` | Web UI theme name | `owncloud` |
+| `opencloud.config.files.appRegistry` | App registry configuration (YAML object) | `{}` (uses default) |
+| `opencloud.config.files.csp` | Content Security Policy configuration (YAML object) | `{}` (uses default) |
+| `opencloud.config.files.proxy` | Advanced proxy configuration with role mappings (YAML object) | `{}` |
+| `opencloud.config.files.bannedPasswordList` | Multi-line list of banned passwords | `""` (uses default) |
+
+> 💡 **Tip**: For most use cases, the environment configuration (`config.env`) is sufficient. File configuration (`config.files`) is for advanced scenarios requiring complex YAML structures.
+
+#### SMTP Configuration
+
+Email notification settings:
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.smtp.enabled` | Enable SMTP for email notifications | `false` |
+| `opencloud.smtp.host` | SMTP server hostname | `""` |
+| `opencloud.smtp.port` | SMTP server port | `587` |
+| `opencloud.smtp.sender` | Email sender address | `""` (auto-generated) |
+| `opencloud.smtp.existingSecret` | Name of existing secret with SMTP credentials | `""` |
+| `opencloud.smtp.username` | SMTP username (ignored if existingSecret is set) | `""` |
+| `opencloud.smtp.password` | SMTP password (ignored if existingSecret is set) | `""` |
+| `opencloud.smtp.insecure` | Allow insecure SMTP connections | `false` |
+| `opencloud.smtp.authentication` | SMTP authentication method (plain, login, none) | `plain` |
+| `opencloud.smtp.encryption` | SMTP encryption (starttls, tls, none) | `starttls` |
+
+### OpenCloud Storage Settings
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `opencloud.storage.mode` | Storage backend (s3 or posixfs) | `s3` |
 
 ### OpenCloud S3 Storage Settings
 
@@ -341,7 +480,9 @@ For details see: [OpenCloud PosixFS Documentation](https://docs.opencloud.eu/doc
 
 ### Keycloak Settings
 
-By default the chart deploys an internal keycloak. It can be disabled and replaced with an external IdP.
+OpenCloud supports three authentication modes. By default, the chart deploys an internal Keycloak instance. You can also use an external OIDC provider (Auth0, Okta, Azure AD, etc.) or OpenCloud's internal IDP (when both are disabled).
+
+For detailed external OIDC configuration, see the [External OIDC Provider Configuration Guide](docs/EXTERNAL-OIDC.md).
 
 #### Internal Keycloak
 
@@ -352,7 +493,7 @@ By default the chart deploys an internal keycloak. It can be disabled and replac
 | `keycloak.internal.image.tag` | Keycloak image tag | `26.1.4` |
 | `keycloak.internal.image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `keycloak.internal.replicas` | Number of replicas | `1` |
-| `keycloak.internal.existingSecret` | Name of the existing secret | `` |
+| `keycloak.internal.existingSecret` | Name of the existing secret | `""` |
 | `keycloak.internal.adminUser` | Admin user | `admin` |
 | `keycloak.internal.adminPassword` | Admin password | `admin` |
 | `keycloak.internal.realm` | Realm name | `openCloud` |
@@ -362,20 +503,38 @@ By default the chart deploys an internal keycloak. It can be disabled and replac
 
 > **Note**: When using internal Keycloak with multiple OpenCloud replicas (`opencloud.replicas > 1`), you must use an external shared database or LDAP. The embedded IDM does not support replication. See [issue #53](https://github.com/opencloud-eu/helm/issues/53) for details.
 
-#### Example: Using External IDP
+#### Authentication Mode Examples
 
+**Using Built-in Keycloak (Default)**:
+```yaml
+keycloak:
+  internal:
+    enabled: true  # This is the default
+```
+
+**Using External OIDC Provider (e.g., Okta)**:
 ```yaml
 global:
   oidc:
-    issuer: "https://idp.example.com/realms/openCloud"
-    clientId: "opencloud-web"
+    enabled: true
+    issuer: "https://yourorg.okta.com/oauth2/default"
+    clientId: "opencloud-client"
 
 keycloak:
   internal:
     enabled: false
 ```
 
-**Note**: If `keycloak.internal.enabled` is `true`, the `global.oidc.issuer` should be left empty to not override the generated issuer URL.
+**Using Internal IDP** (no external authentication):
+```yaml
+global:
+  oidc:
+    enabled: false
+
+keycloak:
+  internal:
+    enabled: false  # OpenCloud's internal IDP will be used
+```
 
 ### PostgreSQL Settings
 
