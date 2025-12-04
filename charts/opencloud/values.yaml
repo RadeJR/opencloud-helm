@@ -505,17 +505,28 @@ opencloud:
       
       # Graph service configuration (roles and user management)
       graph:
-        # Available roles (comma-separated list or array)
-        # Default OpenCloud roles: Admin, SpaceAdmin, User, Guest, etc.
-        availableRoles:
-          - "b1e2218d-eef8-4d4c-b82d-0f1a1b48f3b5"  # Admin
-          - "a8d5fe5e-96e3-418d-825b-534dbdf22b99"  # SpaceAdmin
-          - "fb6c3e19-e378-47e5-b277-9732f9de6e21"  # User
-          - "58c63c02-1d89-4572-916a-870abc5a1b7d"  # User Light
-          - "2d00ce52-1fc2-4dbc-8b95-a73b73395f5a"  # Guest
-          - "1c996275-f1c9-4e71-abdf-a42f6495e960"  # User Profile
-          - "312c0871-5ef7-4b3a-85b6-0e4074c64049"  # Graph User
-          - "aa97fe03-7980-45ac-9e50-b325749fd7e6"  # Graph Viewer
+        # Available roles - list of enabled role UUIDs
+        # Leave empty (default) to use OpenCloud's built-in default roles.
+        # The built-in defaults match the enabled roles in docs/unified-roles.txt
+        # Only specify this if you need a custom role configuration.
+        # For full role details see: docs/unified-roles.txt
+        availableRoles: []
+          # Example - custom role configuration:
+          # - "b1e2218d-eef8-4d4c-b82d-0f1a1b48f3b5"  # Viewer: View and download
+          # - "a8d5fe5e-96e3-418d-825b-534dbdf22b99"  # SpaceViewer: View and download (space-level)
+          # - "fb6c3e19-e378-47e5-b277-9732f9de6e21"  # Editor: View, download, upload, edit, add and delete
+          # - "58c63c02-1d89-4572-916a-870abc5a1b7d"  # SpaceEditor: View, download, upload, edit, add, delete including history
+          # - "2d00ce52-1fc2-4dbc-8b95-a73b73395f5a"  # FileEditor: View, download and edit (files only)
+          # - "1c996275-f1c9-4e71-abdf-a42f6495e960"  # EditorLite: View, download and upload (no edit/delete)
+          # - "312c0871-5ef7-4b3a-85b6-0e4074c64049"  # SpaceManager: Full permissions including member management
+          # - "aa97fe03-7980-45ac-9e50-b325749fd7e6"  # SecureViewer: View documents/images/PDFs with watermarks (no download)
+          # 
+          # Disabled by default (can be enabled if needed):
+          # - "d5041006-ebb3-4b4a-b6a4-7c180ecfb17d"  # ViewerListGrants: Viewer + show all invited people
+          # - "e8ea8b21-abd4-45d2-b893-8d1546378e9e"  # EditorListGrants: Editor + show all invited people
+          # - "3284f2d5-0070-4ad8-ac40-c247f7c1fb27"  # SpaceEditorWithoutVersions: SpaceEditor without version access
+          # - "c1235aea-d106-42db-8458-7d5610fb0a67"  # FileEditorListGrants: FileEditor + show all invited people
+          # - "63e64e19-8d43-42ec-a738-2b6af2610efa"  # Deny: Deny all access
         # Assign default user role automatically
         assignDefaultUserRole: false
         # Username matching strategy (none, email, username)

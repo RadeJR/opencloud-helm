@@ -209,9 +209,11 @@ Generate common environment variables for OpenCloud
 - name: OC_URL
   value: "https://{{ include "opencloud.domain" . }}"
 
-# Available roles
+# Available roles (only set if explicitly configured)
+{{- with .Values.opencloud.config.env.graph.availableRoles }}
 - name: GRAPH_AVAILABLE_ROLES
-  value: {{ join "," .Values.opencloud.config.env.graph.availableRoles | quote }}
+  value: {{ join "," . | quote }}
+{{- end }}
 
 # Log settings
 - name: OC_LOG_LEVEL
