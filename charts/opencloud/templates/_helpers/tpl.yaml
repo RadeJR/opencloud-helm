@@ -123,17 +123,10 @@ Return the Collabora domain
 */}}
 {{- define "opencloud.collabora.domain" -}}
 {{- .Values.global.domain.collabora }}
-{{- end }}
+{{- end -}}
 
 {{/*
-Return the Companion domain
-*/}}
-{{- define "opencloud.companion.domain" -}}
-{{- .Values.global.domain.companion }}
-{{- end }}
-
-{{/*
-Return the WOPI domain
+Return the Keycloak domain
 */}}
 {{- define "opencloud.wopi.domain" -}}
 {{- .Values.global.domain.wopi }}
@@ -264,8 +257,6 @@ Generate common environment variables for OpenCloud
 # Domain configuration for web extensions
 - name: ONLYOFFICE_DOMAIN
   value: "{{ .Values.global.domain.onlyoffice }}"
-- name: COMPANION_DOMAIN
-  value: "{{ .Values.global.domain.companion }}"
 
 # Sharing settings
 - name: OC_SHARING_PUBLIC_SHARE_MUST_HAVE_PASSWORD

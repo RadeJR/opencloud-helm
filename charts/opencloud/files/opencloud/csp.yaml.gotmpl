@@ -4,8 +4,6 @@ directives:
   connect-src:
     - '''self'''
     - 'blob:'
-    - 'https://{{ .Values.global.domain.companion }}/'
-    - 'wss://{{ .Values.global.domain.companion }}/'
     - 'https://raw.githubusercontent.com/opencloud-eu/awesome-apps/'
     {{- if .Values.identityProvider.internal.enabled }}
     - 'https://{{ .Values.global.domain.keycloak }}/'

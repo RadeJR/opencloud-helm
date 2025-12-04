@@ -36,8 +36,6 @@ global:
     collabora: collabora.opencloud.test
     # Domain for OnlyOffice
     onlyoffice: onlyoffice.opencloud.test
-    # Domain for Companion
-    companion: companion.opencloud.test
 
   # TLS settings for secure connections
   tls:
