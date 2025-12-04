@@ -7,7 +7,17 @@ directives:
     - 'https://{{ .Values.global.domain.companion }}/'
     - 'wss://{{ .Values.global.domain.companion }}/'
     - 'https://raw.githubusercontent.com/opencloud-eu/awesome-apps/'
-    - 'https://{{ .Values.global.domain.keycloak  }}/'
+    {{- if .Values.identityProvider.internal.enabled }}
+    - 'https://{{ .Values.global.domain.keycloak }}/'
+    {{- else if .Values.identityProvider.external.enabled }}
+    {{- if .Values.identityProvider.external.issuer }}
+    {{- $issuerUrl := .Values.identityProvider.external.issuer }}
+    {{- $parsedUrl := regexFind "^https?://[^/]+" $issuerUrl }}
+    {{- if $parsedUrl }}
+    - '{{ $parsedUrl }}/'
+    {{- end }}
+    {{- end }}
+    {{- end }}
   default-src:
     - '''none'''
   font-src:
