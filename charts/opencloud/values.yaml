@@ -58,6 +58,29 @@ global:
     # Options: Always, IfNotPresent, Never
     pullPolicy: ""
 
+  # Global ingress defaults (can be overridden per service)
+  ingress:
+    # Default ingress class name (e.g., nginx, traefik)
+    # Leave empty to use the cluster default
+    ingressClassName: ""
+
+    # Default annotations preset for common ingress controllers
+    # Supported values: nginx, nginx-no-snippets, traefik, haproxy, contour, istio, ""
+    # These add controller-specific annotations (e.g., for X-Forwarded-Proto header)
+    annotationsPreset: ""
+
+    # Default custom annotations for all ingress resources
+    # Can be overridden per service
+    annotations: {}
+      # Example:
+      # cert-manager.io/cluster-issuer: letsencrypt
+
+    # Default TLS configuration
+    # Can be overridden per service
+    tls:
+      enabled: false
+      secretName: ""
+
 # =====================================================================
 # IDENTITY PROVIDER
 # =====================================================================
@@ -120,6 +143,23 @@ identityProvider:
     
     # Resources
     resources: {}
+  
+    # Ingress configuration for Keycloak
+    ingress:
+      # Enable ingress for Keycloak
+      enabled: false
+      # Ingress class name (inherits from global ingress.ingressClassName if empty)
+      ingressClassName: ""
+      # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+      annotationsPreset: ""
+      # Custom annotations (merged with global ingress.annotations)
+      annotations: {}
+      # TLS configuration
+      tls:
+        # Enable TLS (inherits from global ingress.tls.enabled if not set)
+        enabled: false
+        # TLS secret name (inherits from global ingress.tls.secretName if empty)
+        secretName: ""
   
   # External OIDC Provider
   external:
@@ -321,6 +361,23 @@ collabora:
       cpu: 1
       memory: 1Gi
 
+  # Ingress configuration for Collabora
+  ingress:
+    # Enable ingress for Collabora
+    enabled: false
+    # Ingress class name (inherits from global ingress.ingressClassName if empty)
+    ingressClassName: ""
+    # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+    annotationsPreset: ""
+    # Custom annotations (merged with global ingress.annotations)
+    annotations: {}
+    # TLS configuration
+    tls:
+      # Enable TLS (inherits from global ingress.tls.enabled if not set)
+      enabled: false
+      # TLS secret name (inherits from global ingress.tls.secretName if empty)
+      secretName: ""
+
 # =====================================================================
 # COLLABORATION (ONLYOFFICE)
 # =====================================================================
@@ -412,6 +469,24 @@ onlyoffice:
             zip:
               uncompressed: "1GB"
               template: "*.xml"
+  
+  # Ingress configuration for OnlyOffice Document Server
+  ingress:
+    # Enable ingress for OnlyOffice
+    enabled: false
+    # Ingress class name (inherits from global ingress.ingressClassName if empty)
+    ingressClassName: ""
+    # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+    annotationsPreset: ""
+    # Custom annotations (merged with global ingress.annotations)
+    annotations: {}
+    # TLS configuration
+    tls:
+      # Enable TLS (inherits from global ingress.tls.enabled if not set)
+      enabled: false
+      # TLS secret name (inherits from global ingress.tls.secretName if empty)
+      secretName: ""
+  
   # Collaboration service settings
   collaboration:
     # Enable collaboration service
@@ -424,6 +499,23 @@ onlyoffice:
       limits:
         cpu: 5000m
         memory: 10Gi
+    
+    # Ingress configuration for OnlyOffice Collaboration/WOPI service
+    ingress:
+      # Enable ingress for Collaboration service
+      enabled: false
+      # Ingress class name (inherits from global ingress.ingressClassName if empty)
+      ingressClassName: ""
+      # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+      annotationsPreset: ""
+      # Custom annotations (merged with global ingress.annotations)
+      annotations: {}
+      # TLS configuration
+      tls:
+        # Enable TLS (inherits from global ingress.tls.enabled if not set)
+        enabled: false
+        # TLS secret name (inherits from global ingress.tls.secretName if empty)
+        secretName: ""
 
 # =====================================================================
 # OPENCLOUD CORE
@@ -738,6 +830,23 @@ opencloud:
       cpu: 100m
       memory: 128Mi
   
+  # Ingress configuration for OpenCloud
+  ingress:
+    # Enable ingress for OpenCloud
+    enabled: false
+    # Ingress class name (inherits from global ingress.ingressClassName if empty)
+    ingressClassName: ""
+    # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+    annotationsPreset: ""
+    # Custom annotations (merged with global ingress.annotations)
+    annotations: {}
+    # TLS configuration
+    tls:
+      # Enable TLS (inherits from global ingress.tls.enabled if not set)
+      enabled: false
+      # TLS secret name (inherits from global ingress.tls.secretName if empty)
+      secretName: ""
+  
   # Persistence configuration
   persistence:
     config:
@@ -978,42 +1087,3 @@ httpRoute:
     # Gateway annotations
     infrastructure:
       annotations: {}
-
-# =====================================================================
-# INGRESS
-# =====================================================================
-
-# Ingress configuration
-ingress:
-  # Whether to enable ingress resources for components
-  enabled: false
-
-  # The ingress class name to use (e.g., nginx, traefik). Leave empty to use the cluster default.
-  # Note: This sets the Kubernetes `spec.ingressClassName` field.
-  ingressClassName: ""
-
-  # Some components (e.g., OnlyOffice) require the X-Forwarded-Proto header to be set.
-  #
-  # Set 'annotationsPreset' to inject known ingress-controller-specific annotations
-  # for injecting the header. Supported values: nginx, nginx-no-snippets, traefik, haproxy, contour, istio
-  #
-  # Use 'nginx-no-snippets' for environments where NGINX configuration snippets are forbidden
-  # (e.g., Rackspace, security-restricted clusters). This preset uses built-in NGINX features
-  # instead of custom configuration snippets.
-  #
-  # If set to "traefik" and OnlyOffice is enabled, the chart will create a Middleware
-  # named 'add-x-forwarded-proto-https' for use in both Ingress and Gateway HTTPRoute.
-  #
-  # This is required because Traefik does not allow simple header injection via annotations
-  # or Gateway filters and instead expects a Middleware to be referenced.
-  #
-  # These annotations are added in addition to any defined in 'annotations'.
-  # If there's a conflict, Helm will error. To avoid this, set annotationsPreset: ""
-  # and define all annotations manually (including creating any required Middleware).
-  annotationsPreset: ""  # optional, default ""
-
-  # Custom annotations applied to all ingress resources.
-  # These are merged with any annotations from 'annotationsPreset' (if set).
-  annotations: {}
-    # Example:
-    # cert-manager.io/cluster-issuer: letsencrypt

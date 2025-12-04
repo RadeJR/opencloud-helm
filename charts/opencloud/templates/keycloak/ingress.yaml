@@ -1,19 +1,31 @@
-{{- if .Values.identityProvider.internal.enabled }}
+{{- if and .Values.identityProvider.internal.ingress.enabled .Values.identityProvider.internal.enabled }}
+{{- $ingressClassName := .Values.identityProvider.internal.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
+{{- $annotationsPreset := .Values.identityProvider.internal.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
+{{- $annotations := merge (deepCopy .Values.identityProvider.internal.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
+{{- $tlsEnabled := .Values.identityProvider.internal.ingress.tls.enabled | default .Values.global.ingress.tls.enabled }}
+{{- $tlsSecretName := .Values.identityProvider.internal.ingress.tls.secretName | default .Values.global.ingress.tls.secretName }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "opencloud.fullname" . }}-keycloak
   annotations:
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- if $annotationsPreset }}
+    {{- include (printf "opencloud.ingress.annotations.%s" $annotationsPreset) . | nindent 4 }}
+    {{- end }}
+    {{- with $annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.ingressClassName }}
-  ingressClassName: {{ .Values.ingress.ingressClassName | quote }}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName | quote }}
   {{- end }}
-  {{- if .Values.global.tls.enabled }}
+  {{- if $tlsEnabled }}
   tls:
     - hosts:
         - {{ .Values.global.domain.keycloak | quote }}
-      secretName: {{ .Values.global.tls.secretName }}
+      {{- if $tlsSecretName }}
+      secretName: {{ $tlsSecretName }}
+      {{- end }}
   {{- end }}
   rules:
     - host: {{ .Values.global.domain.keycloak | quote }}
