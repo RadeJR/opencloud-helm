@@ -433,16 +433,15 @@ Generate admin and demo user environment variables
 Generate NATS environment variables
 */}}
 {{- define "opencloud.env.nats" -}}
+# Cache store type (always nats-js-kv for this chart)
+- name: OC_CACHE_STORE
+  value: "nats-js-kv"
 {{- if .Values.opencloud.nats.external.enabled }}
-# Use the external nats as the service registry
-- name: MICRO_REGISTRY_ADDRESS
-  value: {{ .Values.opencloud.nats.external.endpoint | quote }}
-# Use the external nats as the cache and persistent store
+# External NATS configuration
 - name: OC_CACHE_STORE_NODES
   value: {{ .Values.opencloud.nats.external.endpoint | quote }}
 - name: OC_PERSISTENT_STORE_NODES
   value: {{ .Values.opencloud.nats.external.endpoint | quote }}
-# Use the external nats as the messaging system
 - name: OC_EVENTS_ENDPOINT
   value: {{ .Values.opencloud.nats.external.endpoint | quote }}
 - name: OC_EVENTS_CLUSTER
@@ -455,14 +454,6 @@ Generate NATS environment variables
 - name: OC_EVENTS_TLS_ROOT_CA_CERTIFICATE
   value: /etc/opencloud/nats-ca/ca.crt
 {{- end }}
-{{- else }}
-- name: MICRO_REGISTRY_ADDRESS
-  value: "127.0.0.1:9233"
-# Make the registry available to the app provider containers
-- name: NATS_NATS_HOST
-  value: "0.0.0.0"
-- name: NATS_NATS_PORT
-  value: "9233"
 {{- end }}
 {{- end -}}
 

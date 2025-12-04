@@ -483,9 +483,10 @@ opencloud:
   createDemoUsers: false
   # Additional services to start
   additionalServices: []
-  # Services to exclude from starting (will be added to automatically based on configuration)
-  # Note: 'idp' is automatically excluded when using external OIDC or Keycloak
-  # Note: 'nats' is automatically excluded when using external NATS
+  # Services to exclude from starting
+  # Note: Services are automatically excluded based on configuration:
+  #   - 'idp' is excluded when using any identity provider (internal Keycloak or external OIDC)
+  #   - 'nats' is excluded when using external NATS (nats.external.enabled: true)
   excludeServices: []
   
   # Application configuration
@@ -762,37 +763,52 @@ opencloud:
       # Access mode (ReadWriteOnce or ReadWriteMany for multiple replicas)
       accessMode: ReadWriteOnce
 
+  # =====================================================================
+  # NATS (Messaging System)
+  # =====================================================================
+  
+  # NATS configuration for messaging, caching, and service registry
+  # Choose ONE: either internal (embedded) OR external NATS
   nats:
+    # Internal embedded NATS (default)
+    # Suitable for development and small deployments
+    internal:
+      # Enable internal embedded NATS instance
+      enabled: true
+      # Internal NATS listens on 127.0.0.1:9233 (localhost only)
+      # For app provider containers, it's exposed on 0.0.0.0:9233
+    
+    # External NATS cluster
+    # Recommended for production, high availability, and larger deployments (>100 users)
     external:
-      # -- Use an external NATS messaging system instead of the internal one.
-      # Recommended for all production instances.
-      # Needs to be used if HighAvailability is needed.
-      # Needs to be used if OpenCloud shall be used by more than a 2-digit user count.
+      # Enable external NATS cluster
+      # When enabled, this takes precedence over internal NATS
       enabled: false
 
-      # -- Endpoint of the messaging system.
+      # NATS server endpoint
       endpoint: nats.opencloud-nats.svc.cluster.local:4222
 
-      # -- Cluster name to use with the messaging system.
+      # Cluster name for the NATS cluster
       cluster: opencloud-cluster
 
+      # TLS configuration for NATS connection
       tls:
-        # -- Enables TLS encrypted communication with the messaging system.
-        # Recommended for production installations.
+        # Enable TLS encrypted communication with NATS
+        # Recommended for production
         enabled: false
         
-        # -- Set only to false, if the certificate of your messaging system service is not trusted.
-        # If set to false, you need to put the CA cert of the messaging system server into the secret referenced by "caSecretName"
+        # Whether the NATS server certificate is trusted
+        # Set to false if using self-signed certificates
         certTrusted: true
 
-        # -- Disables SSL certificate checking for connections to the messaging system server.
-        # -- For self signed certificates, consider to put the CA cert of the messaging system secure server into the secret referenced by "caSecretName"
-        # Not recommended for production installations.
+        # Disable SSL certificate verification (insecure)
+        # Not recommended for production
         insecure: false
 
-        # Use existing CA secret for nats credentials (Note: secretKeyName must be 'ca.crt' with the root CA certificate for NATS)
-        # Only used if certTrusted is false
-        caSecretName : opencloud-nats-ca
+        # Secret name containing the CA certificate for NATS
+        # Only used when certTrusted is false
+        # Secret must contain key 'ca.crt' with the root CA certificate
+        caSecretName: opencloud-nats-ca
 
   # =====================================================================
   # EMAIL (SMTP)
