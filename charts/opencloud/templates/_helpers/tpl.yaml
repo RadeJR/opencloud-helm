@@ -463,6 +463,9 @@ Generate NATS environment variables
 - name: OC_EVENTS_TLS_ROOT_CA_CERTIFICATE
   value: /etc/opencloud/nats-ca/ca.crt
 {{- end }}
+{{- else }}
+- name: NATS_NATS_HOST
+  value: 0.0.0.0
 {{- end }}
 {{- end -}}
 

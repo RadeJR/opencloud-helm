@@ -1020,8 +1020,7 @@ opencloud:
     internal:
       # Enable internal embedded NATS instance
       enabled: true
-      # Internal NATS listens on 127.0.0.1:9233 (localhost only)
-      # For app provider containers, it's exposed on 0.0.0.0:9233
+      # Internal NATS listens on 0.0.0.0:9233 (localhost only)
     
     # External NATS cluster
     # Recommended for production, high availability, and larger deployments (>100 users)
