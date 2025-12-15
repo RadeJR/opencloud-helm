@@ -19,6 +19,18 @@ spec:
       protocol: TCP
       name: nats
     {{- end }}
+    {{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
+    {{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
+    {{- if or $collaboraEnabled $onlyofficeEnabled }}
+    - port: 9300
+      targetPort: 9300
+      protocol: TCP
+      name: collaboration-http
+    - port: 9301
+      targetPort: 9301
+      protocol: TCP
+      name: collaboration-grpc
+    {{- end }}
   selector:
     {{- include "opencloud.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: opencloud

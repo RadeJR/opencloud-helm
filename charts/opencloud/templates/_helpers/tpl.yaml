@@ -217,9 +217,15 @@ Generate common environment variables for OpenCloud
   value: {{ .Values.opencloud.config.log.pretty | quote }}
 
 # Enable services that are not started automatically
-{{- with .Values.opencloud.additionalServices }}
+{{- $addServices := .Values.opencloud.additionalServices | default (list) }}
+{{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
+{{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
+{{- if or $collaboraEnabled $onlyofficeEnabled }}
+  {{- $addServices = append $addServices "collaboration" }}
+{{- end }}
+{{- if gt (len $addServices) 0 }}
 - name: OC_ADD_RUN_SERVICES
-  value: {{ join "," . | quote }}
+  value: {{ join "," $addServices | quote }}
 {{- end }}
 
 {{- $exclude := .Values.opencloud.excludeServices | default (list) }}
@@ -466,6 +472,119 @@ Generate NATS environment variables
 {{- else }}
 - name: NATS_NATS_HOST
   value: 0.0.0.0
+{{- end }}
+{{- end -}}
+
+{{/*
+Generate collaboration environment variables for built-in collaboration service
+*/}}
+{{- define "opencloud.env.collaboration" -}}
+{{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
+{{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
+{{- $externalEnabled := .Values.collaboration.external.enabled }}
+
+{{- $enabledCount := 0 }}
+{{- if $collaboraEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
+{{- if $onlyofficeEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
+{{- if $externalEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
+
+{{- if gt $enabledCount 1 }}
+{{- fail "Only one collaboration provider can be enabled at the same time (collabora, onlyoffice, or external)!" }}
+{{- end }}
+
+{{- if or $collaboraEnabled $onlyofficeEnabled }}
+# Collaboration service addresses (built-in service)
+- name: COLLABORATION_GRPC_ADDR
+  value: {{ .Values.collaboration.service.grpcAddr | quote }}
+- name: COLLABORATION_HTTP_ADDR
+  value: {{ .Values.collaboration.service.httpAddr | quote }}
+
+# Collaboration log level (inherits from OpenCloud log level)
+- name: COLLABORATION_LOG_LEVEL
+  value: {{ .Values.opencloud.config.log.level | quote }}
+
+{{- if $onlyofficeEnabled }}
+# OnlyOffice configuration
+- name: COLLABORATION_WOPI_SRC
+  {{- if .Values.collaboration.onlyoffice.wopiSrc }}
+  value: {{ .Values.collaboration.onlyoffice.wopiSrc | quote }}
+  {{- else }}
+  # OnlyOffice requires external WOPI URL (accessible from the browser)
+  value: "https://{{ include "opencloud.wopi.domain" . }}"
+  {{- end }}
+- name: COLLABORATION_APP_NAME
+  value: {{ .Values.collaboration.onlyoffice.appName | quote }}
+- name: COLLABORATION_APP_PRODUCT
+  value: {{ .Values.collaboration.onlyoffice.product | quote }}
+- name: COLLABORATION_APP_ADDR
+  {{- if .Values.collaboration.onlyoffice.url }}
+  value: {{ .Values.collaboration.onlyoffice.url | quote }}
+  {{- else }}
+  value: "https://{{ include "opencloud.onlyoffice.domain" . }}"
+  {{- end }}
+- name: COLLABORATION_APP_ICON
+  {{- if .Values.collaboration.onlyoffice.icon }}
+  value: {{ .Values.collaboration.onlyoffice.icon | quote }}
+  {{- else }}
+  value: "https://{{ include "opencloud.onlyoffice.domain" . }}/web-apps/apps/documenteditor/main/resources/img/favicon.ico"
+  {{- end }}
+{{- if .Values.collaboration.onlyoffice.insecure }}
+- name: COLLABORATION_APP_INSECURE
+  value: "true"
+{{- end }}
+{{- end }}
+
+{{- if $collaboraEnabled }}
+# Collabora configuration
+- name: COLLABORATION_WOPI_SRC
+  {{- if .Values.collaboration.collabora.wopiSrc }}
+  value: {{ .Values.collaboration.collabora.wopiSrc | quote }}
+  {{- else }}
+  # Collabora can connect directly to the internal service
+  value: "http://{{ include "opencloud.opencloud.fullname" . }}:9300"
+  {{- end }}
+- name: COLLABORATION_APP_NAME
+  value: {{ .Values.collaboration.collabora.appName | quote }}
+- name: COLLABORATION_APP_PRODUCT
+  value: {{ .Values.collaboration.collabora.product | quote }}
+- name: COLLABORATION_APP_ADDR
+  {{- if .Values.collaboration.collabora.url }}
+  value: {{ .Values.collaboration.collabora.url | quote }}
+  {{- else }}
+  value: "https://{{ include "opencloud.collabora.domain" . }}"
+  {{- end }}
+- name: COLLABORATION_APP_ICON
+  {{- if .Values.collaboration.collabora.icon }}
+  value: {{ .Values.collaboration.collabora.icon | quote }}
+  {{- else }}
+  value: "https://{{ include "opencloud.collabora.domain" . }}/favicon.ico"
+  {{- end }}
+{{- if .Values.collaboration.collabora.insecure }}
+- name: COLLABORATION_APP_INSECURE
+  value: "true"
+{{- end }}
+{{- end }}
+
+{{- end }}
+
+{{- if $externalEnabled }}
+# External collaboration provider configuration
+- name: COLLABORATION_WOPI_SRC
+  value: {{ required "collaboration.external.wopiSrc is required when using external collaboration provider" .Values.collaboration.external.wopiSrc | quote }}
+- name: COLLABORATION_APP_NAME
+  value: {{ required "collaboration.external.appName is required when using external collaboration provider" .Values.collaboration.external.appName | quote }}
+- name: COLLABORATION_APP_PRODUCT
+  value: {{ required "collaboration.external.product is required when using external collaboration provider" .Values.collaboration.external.product | quote }}
+- name: COLLABORATION_APP_ADDR
+  value: {{ required "collaboration.external.url is required when using external collaboration provider" .Values.collaboration.external.url | quote }}
+{{- if .Values.collaboration.external.icon }}
+- name: COLLABORATION_APP_ICON
+  value: {{ .Values.collaboration.external.icon | quote }}
+{{- end }}
+{{- if .Values.collaboration.external.insecure }}
+- name: COLLABORATION_APP_INSECURE
+  value: "true"
+{{- end }}
 {{- end }}
 {{- end -}}
 

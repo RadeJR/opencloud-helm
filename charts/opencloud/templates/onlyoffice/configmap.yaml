@@ -1,4 +1,4 @@
-{{- if .Values.onlyoffice.enabled }}
+{{- if .Values.collaboration.onlyoffice.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

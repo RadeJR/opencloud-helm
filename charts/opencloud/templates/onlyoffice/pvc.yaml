@@ -1,4 +1,4 @@
-{{- if and .Values.onlyoffice.enabled (and .Values.onlyoffice.persistence.enabled (not .Values.onlyoffice.persistence.existingClaim)) }}
+{{- if and .Values.collaboration.onlyoffice.enabled (and .Values.collaboration.onlyoffice.persistence.enabled (not .Values.collaboration.onlyoffice.persistence.existingClaim)) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -13,8 +13,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.onlyoffice.persistence.size | default "2Gi" }}
-  {{- with include "opencloud.storageClass" (dict "local" .Values.onlyoffice.persistence.storageClass "global" .Values.global.storage.storageClass) }}
+      storage: {{ .Values.collaboration.onlyoffice.persistence.size | default "2Gi" }}
+  {{- with include "opencloud.storageClass" (dict "local" .Values.collaboration.onlyoffice.persistence.storageClass "global" .Values.global.storage.storageClass) }}
   storageClassName: {{ . | quote }}
   {{- end }}
 {{- end }}

@@ -1,4 +1,4 @@
-{{- if .Values.onlyoffice.enabled }}
+{{- if .Values.collaboration.onlyoffice.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,29 +20,29 @@ spec:
     spec:
       containers:
         - name: onlyoffice
-          image: {{ include "opencloud.image" (dict "Chart" .Chart "imageValues" .Values.onlyoffice.image "global" .Values.global) | quote }}
-          imagePullPolicy: {{ include "opencloud.image.pullPolicy" (dict "pullPolicy" .Values.onlyoffice.image.pullPolicy "global" .Values.global) }}
+          image: {{ include "opencloud.image" (dict "Chart" .Chart "imageValues" .Values.collaboration.onlyoffice.image "global" .Values.global) | quote }}
+          imagePullPolicy: {{ include "opencloud.image.pullPolicy" (dict "pullPolicy" .Values.collaboration.onlyoffice.image.pullPolicy "global" .Values.global) }}
           command: ["/bin/sh", "/entrypoint-override.sh"]
           env:
             - name: WOPI_ENABLED
-              value: {{ tpl (toString .Values.onlyoffice.wopi.enabled) . | quote }}
+              value: {{ tpl (toString .Values.collaboration.onlyoffice.wopi.enabled) . | quote }}
             - name: USE_UNAUTHORIZED_STORAGE
-              value: {{ tpl (toString .Values.onlyoffice.useUnauthorizedStorage) . | quote }}
+              value: {{ tpl (toString .Values.collaboration.onlyoffice.useUnauthorizedStorage) . | quote }}
             - name: DB_TYPE
-              value: "{{ .Values.onlyoffice.config.coAuthoring.sql.type | default "postgres" }}"
+              value: "{{ .Values.collaboration.onlyoffice.config.coAuthoring.sql.type | default "postgres" }}"
             - name: DB_HOST
-              value: "{{ .Values.onlyoffice.config.coAuthoring.sql.dbHost | default "localhost" }}"
+              value: "{{ .Values.collaboration.onlyoffice.config.coAuthoring.sql.dbHost | default "localhost" }}"
             - name: DB_PORT
-              value: "{{ .Values.onlyoffice.config.coAuthoring.sql.dbPort | default "5432" }}"
+              value: "{{ .Values.collaboration.onlyoffice.config.coAuthoring.sql.dbPort | default "5432" }}"
             - name: DB_NAME
-              value: "{{ .Values.onlyoffice.config.coAuthoring.sql.dbName | default "onlyoffice" }}"
+              value: "{{ .Values.collaboration.onlyoffice.config.coAuthoring.sql.dbName | default "onlyoffice" }}"
             - name: DB_USER
-              value: "{{ .Values.onlyoffice.config.coAuthoring.sql.dbUser | default "onlyoffice" }}"
+              value: "{{ .Values.collaboration.onlyoffice.config.coAuthoring.sql.dbUser | default "onlyoffice" }}"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{- if .Values.onlyoffice.config.coAuthoring.secret.existingSecret }}
-                          {{ .Values.onlyoffice.config.coAuthoring.secret.existingSecret }}
+                  name: {{- if .Values.collaboration.onlyoffice.config.coAuthoring.secret.existingSecret }}
+                          {{ .Values.collaboration.onlyoffice.config.coAuthoring.secret.existingSecret }}
                         {{- else }}
                           {{ include "opencloud.fullname" . }}-onlyoffice
                         {{- end }}
@@ -52,8 +52,8 @@ spec:
             - name: AMQP_URI
               valueFrom:
                 secretKeyRef:
-                  name: {{- if .Values.onlyoffice.config.rabbitmq.existingSecret }}
-                          {{ .Values.onlyoffice.config.rabbitmq.existingSecret }}
+                  name: {{- if .Values.collaboration.onlyoffice.config.rabbitmq.existingSecret }}
+                          {{ .Values.collaboration.onlyoffice.config.rabbitmq.existingSecret }}
                         {{- else }}
                           {{ include "opencloud.fullname" . }}-rabbitmq
                         {{- end }}
@@ -72,12 +72,12 @@ spec:
             - name: onlyoffice-config
               mountPath: /etc/onlyoffice/documentserver/local.dist.json
               subPath: local.json
-            {{- if .Values.onlyoffice.persistence.enabled }}
+            {{- if .Values.collaboration.onlyoffice.persistence.enabled }}
             - name: onlyoffice-data
               mountPath: /var/lib/onlyoffice
             {{- end }}
           resources:
-            {{- toYaml .Values.onlyoffice.resources | nindent 12 }}
+            {{- toYaml .Values.collaboration.onlyoffice.resources | nindent 12 }}
           livenessProbe:
             httpGet:
               path: /hosting/discovery
@@ -94,11 +94,11 @@ spec:
         - name: onlyoffice-config
           configMap:
             name: {{ include "opencloud.fullname" . }}-onlyoffice-config
-        {{- if .Values.onlyoffice.persistence.enabled }}
+        {{- if .Values.collaboration.onlyoffice.persistence.enabled }}
         - name: onlyoffice-data
           persistentVolumeClaim:
-            {{- if .Values.onlyoffice.persistence.existingClaim }}
-            claimName: {{ .Values.onlyoffice.persistence.existingClaim | quote }}
+            {{- if .Values.collaboration.onlyoffice.persistence.existingClaim }}
+            claimName: {{ .Values.collaboration.onlyoffice.persistence.existingClaim | quote }}
             {{- else }}
             claimName: {{ include "opencloud.fullname" . }}-onlyoffice-data
             {{- end }}

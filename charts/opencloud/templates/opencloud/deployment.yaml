@@ -257,6 +257,7 @@ spec:
             {{- include "opencloud.env.admin" . | nindent 12 }}
             {{- include "opencloud.env.nats" . | nindent 12 }}
             {{- include "opencloud.env.storage" . | nindent 12 }}
+            {{- include "opencloud.env.collaboration" . | nindent 12 }}
             {{- with .Values.opencloud.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

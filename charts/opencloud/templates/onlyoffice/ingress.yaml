@@ -1,11 +1,11 @@
-{{- if and .Values.onlyoffice.ingress.enabled .Values.onlyoffice.enabled }}
-{{- $ingressClassName := .Values.onlyoffice.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
-{{- $annotationsPreset := .Values.onlyoffice.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
-{{- $annotations := merge (deepCopy .Values.onlyoffice.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
-{{- $tlsEnabled := .Values.onlyoffice.ingress.tls.enabled }}
+{{- if and .Values.collaboration.onlyoffice.ingress.enabled .Values.collaboration.onlyoffice.enabled }}
+{{- $ingressClassName := .Values.collaboration.onlyoffice.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
+{{- $annotationsPreset := .Values.collaboration.onlyoffice.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
+{{- $annotations := merge (deepCopy .Values.collaboration.onlyoffice.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
+{{- $tlsEnabled := .Values.collaboration.onlyoffice.ingress.tls.enabled }}
 {{- $tlsSecretName := "" }}
-{{- if .Values.onlyoffice.ingress.tls.secretName }}
-  {{- $tlsSecretName = .Values.onlyoffice.ingress.tls.secretName }}
+{{- if .Values.collaboration.onlyoffice.ingress.tls.secretName }}
+  {{- $tlsSecretName = .Values.collaboration.onlyoffice.ingress.tls.secretName }}
 {{- else if .Values.global.ingress.tls.secretName }}
   {{- $tlsSecretName = .Values.global.ingress.tls.secretName }}
 {{- else }}

@@ -29,11 +29,11 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 3. MinIO: rootUser: {{ .Values.storage.internal.rootUser }}, rootPassword: {{ .Values.storage.internal.rootPassword | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-{{- if .Values.collabora.enabled }}
-{{- if and (not .Values.collabora.admin.password) (not .Values.collabora.existingSecret) }}
-4. Collabora: username: {{ .Values.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
+{{- if .Values.collaboration.collabora.enabled }}
+{{- if and (not .Values.collaboration.collabora.admin.password) (not .Values.collaboration.collabora.existingSecret) }}
+4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
 {{- else }}
-4. Collabora: username: {{ .Values.collabora.admin.username }}, password: {{ .Values.collabora.admin.password | default "<using existing secret>" }}
+4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
 5. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
@@ -51,11 +51,11 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 2. MinIO: rootUser: {{ .Values.storage.internal.rootUser }}, rootPassword: {{ .Values.storage.internal.rootPassword | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-{{- if .Values.collabora.enabled }}
-{{- if and (not .Values.collabora.admin.password) (not .Values.collabora.existingSecret) }}
-4. Collabora: username: {{ .Values.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
+{{- if .Values.collaboration.collabora.enabled }}
+{{- if and (not .Values.collaboration.collabora.admin.password) (not .Values.collaboration.collabora.existingSecret) }}
+4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
 {{- else }}
-4. Collabora: username: {{ .Values.collabora.admin.username }}, password: {{ .Values.collabora.admin.password | default "<using existing secret>" }}
+4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
 5. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
@@ -68,11 +68,11 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 1. MinIO: rootUser: {{ .Values.storage.internal.rootUser }}, rootPassword: {{ .Values.storage.internal.rootPassword | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-{{- if .Values.collabora.enabled }}
-{{- if and (not .Values.collabora.admin.password) (not .Values.collabora.existingSecret) }}
-2. Collabora: username: {{ .Values.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
+{{- if .Values.collaboration.collabora.enabled }}
+{{- if and (not .Values.collaboration.collabora.admin.password) (not .Values.collaboration.collabora.existingSecret) }}
+2. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.fullname" . }}-collabora -o jsonpath='{.data.password}' | base64 -d>
 {{- else }}
-2. Collabora: username: {{ .Values.collabora.admin.username }}, password: {{ .Values.collabora.admin.password | default "<using existing secret>" }}
+2. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
 3. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
@@ -116,9 +116,9 @@ The following services have been deployed:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.onlyoffice.collaboration.enabled .Values.onlyoffice.enabled }}
-4. OnlyOffice Collaboration Service:
-   - Service: {{ include "opencloud.fullname" . }}-collaboration
+{{- if .Values.collaboration.onlyoffice.enabled }}
+4. OnlyOffice Collaboration Service (built-in to OpenCloud):
+   - Service: {{ include "opencloud.opencloud.fullname" . }}
    - HTTP Port: 9300
    - gRPC Port: 9301
 {{- end }}
@@ -137,8 +137,8 @@ Make sure the Gateway exists and is properly configured to accept traffic for th
 {{- if .Values.storage.internal.enabled }}
 - MinIO Console: {{ include "opencloud.minio.domain" . }} (Service: {{ include "opencloud.minio.fullname" . }}, Port: 9001)
 {{- end }}
-{{- if and .Values.onlyoffice.collaboration.enabled .Values.onlyoffice.enabled }}
-- OnlyOffice Collaboration: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.fullname" . }}-collaboration, Port: 9300)
+{{- if .Values.collaboration.onlyoffice.enabled }}
+- OnlyOffice WOPI: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.opencloud.fullname" . }}, Port: 9300)
 {{- end }}
 
 {{- else }}
@@ -153,8 +153,8 @@ Example domains for your ingress configuration:
 {{- if .Values.storage.internal.enabled }}
 - MinIO Console: {{ include "opencloud.minio.domain" . }} (Service: {{ include "opencloud.minio.fullname" . }}, Port: 9001)
 {{- end }}
-{{- if and .Values.onlyoffice.collaboration.enabled .Values.onlyoffice.enabled }}
-- OnlyOffice Collaboration: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.fullname" . }}-collaboration, Port: 9300)
+{{- if .Values.collaboration.onlyoffice.enabled }}
+- OnlyOffice WOPI: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.opencloud.fullname" . }}, Port: 9300)
 {{- end }}
 {{- end }}
 

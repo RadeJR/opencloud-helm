@@ -1,11 +1,11 @@
-{{- if and .Values.collabora.ingress.enabled .Values.collabora.enabled }}
-{{- $ingressClassName := .Values.collabora.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
-{{- $annotationsPreset := .Values.collabora.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
-{{- $annotations := merge (deepCopy .Values.collabora.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
-{{- $tlsEnabled := .Values.collabora.ingress.tls.enabled }}
+{{- if and .Values.collaboration.collabora.ingress.enabled .Values.collaboration.collabora.enabled }}
+{{- $ingressClassName := .Values.collaboration.collabora.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
+{{- $annotationsPreset := .Values.collaboration.collabora.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
+{{- $annotations := merge (deepCopy .Values.collaboration.collabora.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
+{{- $tlsEnabled := .Values.collaboration.collabora.ingress.tls.enabled }}
 {{- $tlsSecretName := "" }}
-{{- if .Values.collabora.ingress.tls.secretName }}
-  {{- $tlsSecretName = .Values.collabora.ingress.tls.secretName }}
+{{- if .Values.collaboration.collabora.ingress.tls.secretName }}
+  {{- $tlsSecretName = .Values.collaboration.collabora.ingress.tls.secretName }}
 {{- else if .Values.global.ingress.tls.secretName }}
   {{- $tlsSecretName = .Values.global.ingress.tls.secretName }}
 {{- else }}

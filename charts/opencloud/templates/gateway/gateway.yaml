@@ -96,7 +96,7 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.httpRoute.gateway.namespace | default .Release.Namespace }}
     {{- end }}
-    {{- if .Values.collabora.enabled }}
+    {{- if .Values.collaboration.collabora.enabled }}
     {{- if .Values.global.tls.enabled }}
     - name: collabora-https
     {{- else }}
@@ -123,7 +123,7 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.httpRoute.gateway.namespace | default .Release.Namespace }}
     {{- end }}
-    {{- if .Values.onlyoffice.enabled }}
+    {{- if .Values.collaboration.onlyoffice.enabled }}
     {{- if .Values.global.tls.enabled }}
     - name: onlyoffice-https
     {{- else }}
@@ -150,11 +150,11 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.httpRoute.gateway.namespace | default .Release.Namespace }}
     {{- end }}
-    {{- if and .Values.onlyoffice.collaboration.enabled .Values.onlyoffice.enabled }}
+    {{- if .Values.collaboration.onlyoffice.enabled }}
     {{- if .Values.global.tls.enabled }}
-    - name: collaboration-https
+    - name: wopi-https
     {{- else }}
-    - name: collaboration-http
+    - name: wopi-http
     {{- end }}
       {{- if .Values.global.tls.enabled }}
       protocol: HTTPS

@@ -64,10 +64,10 @@ directives:
     - 'https://docs.opencloud.eu'
     {{- end }}
     {{- end }}
-    {{- if .Values.onlyoffice.enabled }}
+    {{- if .Values.collaboration.onlyoffice.enabled }}
     - 'https://{{ .Values.global.domain.onlyoffice }}/'
     {{- end }}
-    {{- if .Values.collabora.enabled }}
+    {{- if .Values.collaboration.collabora.enabled }}
     - 'https://{{ .Values.global.domain.collabora }}/'
     {{- end }}
     {{- with .Values.opencloud.config.csp }}
@@ -80,10 +80,10 @@ directives:
     - 'data:'
     - 'blob:'
     - 'https://raw.githubusercontent.com/opencloud-eu/awesome-apps/'
-    {{- if .Values.onlyoffice.enabled }}
+    {{- if .Values.collaboration.onlyoffice.enabled }}
     - 'https://{{ .Values.global.domain.onlyoffice }}/'
     {{- end }}
-    {{- if .Values.collabora.enabled }}
+    {{- if .Values.collaboration.collabora.enabled }}
     - 'https://{{ .Values.global.domain.collabora }}/'
     {{- end }}
     {{- with .Values.opencloud.config.csp }}
