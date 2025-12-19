@@ -1,0 +1,49 @@
+{{- if and .Values.collaboration.ingress.enabled (or .Values.collaboration.collabora.enabled .Values.collaboration.external.enabled) }}
+{{- $ingressClassName := .Values.collaboration.ingress.ingressClassName | default .Values.global.ingress.ingressClassName }}
+{{- $annotationsPreset := .Values.collaboration.ingress.annotationsPreset | default .Values.global.ingress.annotationsPreset }}
+{{- $annotations := merge (deepCopy .Values.collaboration.ingress.annotations) (deepCopy .Values.global.ingress.annotations) }}
+{{- $tlsEnabled := .Values.collaboration.ingress.tls.enabled }}
+{{- $tlsSecretName := "" }}
+{{- if .Values.collaboration.ingress.tls.secretName }}
+  {{- $tlsSecretName = .Values.collaboration.ingress.tls.secretName }}
+{{- else if .Values.global.ingress.tls.secretName }}
+  {{- $tlsSecretName = .Values.global.ingress.tls.secretName }}
+{{- else }}
+  {{- $tlsSecretName = printf "%s-collaboration-tls" (include "opencloud.fullname" .) }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "opencloud.fullname" . }}-collaboration
+  labels:
+    {{- include "opencloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collaboration
+  annotations:
+    {{- if $annotationsPreset }}
+    {{- include (printf "opencloud.ingress.annotations.%s" $annotationsPreset) . | nindent 4 }}
+    {{- end }}
+    {{- with $annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName | quote }}
+  {{- end }}
+  {{- if $tlsEnabled }}
+  tls:
+    - hosts:
+        - {{ .Values.global.domain.wopi | quote }}
+      secretName: {{ $tlsSecretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.global.domain.wopi | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "opencloud.opencloud.fullname" . }}
+                port:
+                  number: 9300
+{{- end }}

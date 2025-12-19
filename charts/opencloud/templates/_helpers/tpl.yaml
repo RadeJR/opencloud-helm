@@ -112,25 +112,13 @@ Return the MinIO domain
 
 
 {{/*
-Return the OnlyOffice domain
-*/}}
-{{- define "opencloud.onlyoffice.domain" -}}
-{{- .Values.global.domain.onlyoffice }}
-{{- end }}
-
-{{/*
 Return the Collabora domain
 */}}
 {{- define "opencloud.collabora.domain" -}}
 {{- .Values.global.domain.collabora }}
 {{- end -}}
 
-{{/*
-Return the Keycloak domain
-*/}}
-{{- define "opencloud.wopi.domain" -}}
-{{- .Values.global.domain.wopi }}
-{{- end }}
+
 
 {{/*
 Create a fully qualified Tika name.
@@ -219,8 +207,7 @@ Generate common environment variables for OpenCloud
 # Enable services that are not started automatically
 {{- $addServices := .Values.opencloud.additionalServices | default (list) }}
 {{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
-{{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
-{{- if or $collaboraEnabled $onlyofficeEnabled }}
+{{- if $collaboraEnabled }}
   {{- $addServices = append $addServices "collaboration" }}
 {{- end }}
 {{- if gt (len $addServices) 0 }}
@@ -255,10 +242,6 @@ Generate common environment variables for OpenCloud
 # INSECURE: needed if OpenCloud is using self generated certificates
 - name: OC_INSECURE
   value: {{ tpl (toString .Values.opencloud.config.insecure) . | quote }}
-
-# Domain configuration for web extensions
-- name: ONLYOFFICE_DOMAIN
-  value: "{{ .Values.global.domain.onlyoffice }}"
 
 # Sharing settings
 - name: OC_SHARING_PUBLIC_SHARE_MUST_HAVE_PASSWORD
@@ -480,61 +463,26 @@ Generate collaboration environment variables for built-in collaboration service
 */}}
 {{- define "opencloud.env.collaboration" -}}
 {{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
-{{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
 {{- $externalEnabled := .Values.collaboration.external.enabled }}
 
 {{- $enabledCount := 0 }}
 {{- if $collaboraEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
-{{- if $onlyofficeEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
 {{- if $externalEnabled }}{{- $enabledCount = add $enabledCount 1 }}{{- end }}
 
 {{- if gt $enabledCount 1 }}
-{{- fail "Only one collaboration provider can be enabled at the same time (collabora, onlyoffice, or external)!" }}
+{{- fail "Only one collaboration provider can be enabled at the same time (collabora or external)!" }}
 {{- end }}
 
-{{- if or $collaboraEnabled $onlyofficeEnabled }}
+{{- if $collaboraEnabled }}
 # Collaboration service addresses (built-in service)
 - name: COLLABORATION_GRPC_ADDR
   value: {{ .Values.collaboration.service.grpcAddr | quote }}
 - name: COLLABORATION_HTTP_ADDR
   value: {{ .Values.collaboration.service.httpAddr | quote }}
+- name: COLLABORATION_CS3API_DATAGATEWAY_INSECURE
+  value: {{ .Values.opencloud.config.insecure | quote }}
 
-# Collaboration log level (inherits from OpenCloud log level)
-- name: COLLABORATION_LOG_LEVEL
-  value: {{ .Values.opencloud.config.log.level | quote }}
-
-{{- if $onlyofficeEnabled }}
-# OnlyOffice configuration
-- name: COLLABORATION_WOPI_SRC
-  {{- if .Values.collaboration.onlyoffice.wopiSrc }}
-  value: {{ .Values.collaboration.onlyoffice.wopiSrc | quote }}
-  {{- else }}
-  # OnlyOffice requires external WOPI URL (accessible from the browser)
-  value: "https://{{ include "opencloud.wopi.domain" . }}"
-  {{- end }}
-- name: COLLABORATION_APP_NAME
-  value: {{ .Values.collaboration.onlyoffice.appName | quote }}
-- name: COLLABORATION_APP_PRODUCT
-  value: {{ .Values.collaboration.onlyoffice.product | quote }}
-- name: COLLABORATION_APP_ADDR
-  {{- if .Values.collaboration.onlyoffice.url }}
-  value: {{ .Values.collaboration.onlyoffice.url | quote }}
-  {{- else }}
-  value: "https://{{ include "opencloud.onlyoffice.domain" . }}"
-  {{- end }}
-- name: COLLABORATION_APP_ICON
-  {{- if .Values.collaboration.onlyoffice.icon }}
-  value: {{ .Values.collaboration.onlyoffice.icon | quote }}
-  {{- else }}
-  value: "https://{{ include "opencloud.onlyoffice.domain" . }}/web-apps/apps/documenteditor/main/resources/img/favicon.ico"
-  {{- end }}
-{{- if .Values.collaboration.onlyoffice.insecure }}
-- name: COLLABORATION_APP_INSECURE
-  value: "true"
-{{- end }}
-{{- end }}
-
-{{- if $collaboraEnabled }}
+# Collabora configuration
 # Collabora configuration
 - name: COLLABORATION_WOPI_SRC
   {{- if .Values.collaboration.collabora.wopiSrc }}
@@ -563,8 +511,6 @@ Generate collaboration environment variables for built-in collaboration service
 - name: COLLABORATION_APP_INSECURE
   value: "true"
 {{- end }}
-{{- end }}
-
 {{- end }}
 
 {{- if $externalEnabled }}

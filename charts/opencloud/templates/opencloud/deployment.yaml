@@ -6,8 +6,13 @@ metadata:
   labels:
     {{- include "opencloud.labels" . | nindent 4 }}
     app.kubernetes.io/component: opencloud
+    {{- with .Values.opencloud.deploymentLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.opencloud.deploymentAnnotations }}
   annotations:
-    reloader.stakater.com/auto: "true"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.opencloud.replicas }}
   selector:
@@ -266,6 +271,12 @@ spec:
               containerPort: 9200
             - name: nats
               containerPort: 9233
+            {{- if or .Values.collaboration.collabora.enabled .Values.collaboration.external.enabled }}
+            - name: collaboration-http
+              containerPort: 9300
+            - name: collaboration-grpc
+              containerPort: 9301
+            {{- end }}
           startupProbe:
             httpGet:
               path: /health

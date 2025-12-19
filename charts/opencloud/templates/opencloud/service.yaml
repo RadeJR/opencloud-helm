@@ -19,9 +19,7 @@ spec:
       protocol: TCP
       name: nats
     {{- end }}
-    {{- $collaboraEnabled := .Values.collaboration.collabora.enabled }}
-    {{- $onlyofficeEnabled := .Values.collaboration.onlyoffice.enabled }}
-    {{- if or $collaboraEnabled $onlyofficeEnabled }}
+    {{- if or .Values.collaboration.collabora.enabled .Values.collaboration.external.enabled }}
     - port: 9300
       targetPort: 9300
       protocol: TCP

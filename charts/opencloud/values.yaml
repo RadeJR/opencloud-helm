@@ -38,12 +38,11 @@ global:
     keycloak: keycloak.opencloud.test
     # Domain for MinIO
     minio: minio.opencloud.test
-    # Domain for WOPI server
-    wopi: wopiserver.opencloud.test
     # Domain for Collabora CODE
     collabora: collabora.opencloud.test
-    # Domain for OnlyOffice
-    onlyoffice: onlyoffice.opencloud.test
+    # Domain for WOPI (collaboration service)
+    wopi: wopi.opencloud.test
+
 
   # TLS settings for secure connections
   tls:
@@ -423,13 +422,14 @@ storage:
 #
 # Collaboration configuration for office document editing.
 # The collaboration service provides WOPI (Web Application Open Platform Interface)
-# support for integrating office suites like Collabora and OnlyOffice.
+# support for integrating office suites like Collabora.
 #
 # Choose ONE provider:
 #   1. collabora - Deploy Collabora Online with built-in collaboration service
-#   2. onlyoffice - Deploy OnlyOffice with built-in collaboration service
-#   3. external - Deploy only the collaboration service, connect to user-provided
-#                 external Collabora/OnlyOffice instance (we don't deploy the office suite)
+#   2. external - Deploy only the collaboration service, connect to user-provided
+#                 external office suite (e.g., Collabora, OnlyOffice). For OnlyOffice,
+#                 deploy it separately with its required dependencies: PostgreSQL,
+#                 RabbitMQ, and Redis.
 #
 # If none are enabled, office document editing will not be available.
 # Only ONE provider should be enabled at a time.
@@ -474,8 +474,8 @@ collaboration:
     
     # SSL settings for Collabora
     ssl:
-      enabled: true
-      verification: true
+      enabled: false
+      verification: false
     
     # Use existing secret for collabora credentials
     # (Note: secretKeyName must be username and password)
@@ -498,6 +498,20 @@ collaboration:
         cpu: 1
         memory: 1Gi
     
+    # Additional deployment annotations
+    deploymentAnnotations: {}
+      # Example for Stakater Reloader (requires reloader to be installed):
+      # reloader.stakater.com/auto: "true"
+    
+    # Additional deployment labels
+    deploymentLabels: {}
+    
+    # Additional pod annotations
+    podAnnotations: {}
+    
+    # Additional pod labels
+    podLabels: {}
+    
     # Ingress configuration for Collabora
     ingress:
       # Enable ingress for Collabora
@@ -515,141 +529,11 @@ collaboration:
         # TLS secret name (inherits from global ingress.tls.secretName if empty)
         secretName: ""
   
-  # -------------------------------------------------------------------------
-  # OnlyOffice
-  # Deploys OnlyOffice and the built-in collaboration service
-  # -------------------------------------------------------------------------
-  onlyoffice:
-    # Enable OnlyOffice deployment and collaboration service
-    enabled: false
-    
-    # App name for registration (used in app registry)
-    appName: "OnlyOffice"
-    
-    # Product name displayed to users
-    product: "OnlyOffice"
-    
-    # OnlyOffice server URL
-    # Leave empty to auto-configure from global.domain.onlyoffice
-    url: ""
-    
-    # Icon URL for OnlyOffice
-    # Leave empty to auto-configure
-    icon: ""
-    
-    # Allow insecure connections (for self-signed certificates)
-    insecure: false
-    
-    # WOPI source URL
-    # OnlyOffice requires external WOPI URL accessible from browser
-    # Leave empty to auto-configure from global.domain.wopi
-    wopiSrc: ""
-    
-    # OnlyOffice container image settings
-    image:
-      registry: docker.io
-      repository: onlyoffice/documentserver
-      tag: 8.2.2
-      pullPolicy: IfNotPresent
-    
-    # WOPI settings
-    wopi:
-      enabled: true
-    
-    # Use unauthorized storage (for self-signed certificates)
-    useUnauthorizedStorage: true
-    
-    # Database configuration
-    db:
-      # Use existing secret for database password
-      existingSecret: ""
-      # Key in the existing secret that contains the password
-      secretKeyName: "password"
-    
-    # Persistence configuration
-    persistence:
-      # Enable persistence
-      enabled: true
-      # Name of existing PVC to use (overrides all other persistence values)
-      existingClaim: ""
-      # Size of the persistent volume
-      size: 2Gi
-      # Storage class
-      storageClass: ""
-    
-    # Resources allocation for OnlyOffice
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 5000m
-        memory: 10Gi
-    
-    # Configuration for local.json
-    config:
-      # CoAuthoring service settings
-      coAuthoring:
-        # SQL database settings
-        sql:
-          type: "postgres"
-          dbHost: "localhost"
-          dbPort: "5432"
-          dbName: "onlyoffice"
-          dbUser: "onlyoffice"
-        
-        # Secret settings
-        secret:
-          # Use existing secret for onlyoffice credentials (Note: secretKeyName must be sessionSecret)
-          existingSecret: ""
-          
-          # ignored if existingSecret is set
-          session:
-            string: "Dd0SXIe1k9oCfdffgrfNmA0TK1bb1B1d38OFSb"
-      # RabbitMQ settings
-      rabbitmq:
-        # Use existing secret for onlyoffice rabbitmq credentials (Note: secretKeyName must be url)
-        existingSecret: ""
-        # ignored if existingSecret is set
-        url: "amqp://guest:Dd0SXIe1k9osdfjkmA0TK1bb1B1d38OFSb@localhost"
-      # File converter settings
-      fileConverter:
-        converter:
-          inputLimits:
-            - type: "docx;dotx;docm;dotm"
-              zip:
-                uncompressed: "1GB"
-                template: "*.xml"
-            - type: "xlsx;xltx;xlsm;xltm"
-              zip:
-                uncompressed: "1GB"
-                template: "*.xml"
-            - type: "pptx;ppsx;potx;pptm;ppsm;potm"
-              zip:
-                uncompressed: "1GB"
-                template: "*.xml"
-    
-    # Ingress configuration for OnlyOffice Document Server
-    ingress:
-      # Enable ingress for OnlyOffice
-      enabled: false
-      # Ingress class name (inherits from global ingress.ingressClassName if empty)
-      ingressClassName: ""
-      # Annotations preset (inherits from global ingress.annotationsPreset if empty)
-      annotationsPreset: ""
-      # Custom annotations (merged with global ingress.annotations)
-      annotations: {}
-      # TLS configuration
-      tls:
-        # Enable TLS (inherits from global ingress.tls.enabled if not set)
-        enabled: false
-        # TLS secret name (inherits from global ingress.tls.secretName if empty)
-        secretName: ""
-  
+
   # -------------------------------------------------------------------------
   # External collaboration provider
   # Deploys only the collaboration service, connects to user-provided
-  # external Collabora/OnlyOffice instance
+  # external office suite (e.g., Collabora, OnlyOffice)
   # -------------------------------------------------------------------------
   external:
     # Enable external collaboration provider
@@ -675,13 +559,30 @@ collaboration:
   
   # -------------------------------------------------------------------------
   # Shared settings for built-in collaboration service
-  # These apply when using collabora, onlyoffice, or external
+  # These apply when using collabora or external
   # -------------------------------------------------------------------------
   service:
     # gRPC server address
     grpcAddr: "0.0.0.0:9301"
     # HTTP server address
     httpAddr: "0.0.0.0:9300"
+  
+  # Ingress configuration for collaboration service (WOPI endpoint)
+  ingress:
+    # Enable ingress for collaboration service
+    enabled: false
+    # Ingress class name (inherits from global ingress.ingressClassName if empty)
+    ingressClassName: ""
+    # Annotations preset (inherits from global ingress.annotationsPreset if empty)
+    annotationsPreset: ""
+    # Custom annotations (merged with global ingress.annotations)
+    annotations: {}
+    # TLS configuration
+    tls:
+      # Enable TLS (inherits from global ingress.tls.enabled if not set)
+      enabled: false
+      # TLS secret name (inherits from global ingress.tls.secretName if empty)
+      secretName: ""
 
 # =====================================================================
 # EXTENSIONS
@@ -947,7 +848,7 @@ opencloud:
     
     # CSP (Content Security Policy) configuration
     # Allows extending default CSP directives with additional sources.
-    # The chart automatically includes required domains (OnlyOffice, Collabora, identity provider).
+    # The chart automatically includes required domains (Collabora, identity provider).
     # Add custom sources to specific directives without overriding the entire CSP.
     # All values should be properly formatted CSP source expressions (e.g., 'https://example.com', '''self''').
     # Example:
@@ -1020,6 +921,14 @@ opencloud:
   #           values:
   #           - opencloud
   #       topologyKey: kubernetes.io/hostname
+  
+  # Additional deployment annotations
+  deploymentAnnotations: {}
+    # Example for Stakater Reloader (requires reloader to be installed):
+    # reloader.stakater.com/auto: "true"
+  
+  # Additional deployment labels
+  deploymentLabels: {}
   
   # Additional pod annotations
   podAnnotations: {}
@@ -1185,7 +1094,7 @@ httpRoute:
     className: cilium
     # Gateway namespace (defaults to Release.Namespace)
     namespace: ""
-    # Gateway section name (applies to all routes). If set to a non-empty value, this overrides the default component-specific section names (e.g., opencloud-https, onlyoffice-https) for all routes. If left empty, the defaults are used.
+    # Gateway section name (applies to all routes). If set to a non-empty value, this overrides the default component-specific section names (e.g., opencloud-https, collabora-https) for all routes. If left empty, the defaults are used.
     sectionName: ""
     # Gateway annotations
     annotations:

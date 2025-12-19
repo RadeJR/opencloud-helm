@@ -36,8 +36,6 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-5. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
-6. RabbitMQ: url: amqp://guest:guest@localhost
 {{- else if not .Values.identityProvider.external.enabled }}
 {{- if and (not .Values.identityProvider.internal.adminPassword) (not .Values.identityProvider.internal.existingSecret) }}
 1. OpenCloud Admin: adminPassword: <randomly generated - retrieve with: kubectl get secret {{ include "opencloud.opencloud.fullname" . }} -o jsonpath='{.data.adminPassword}' | base64 -d> (local auth - no identity provider configured)
@@ -58,8 +56,6 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 4. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-5. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
-6. RabbitMQ: url: amqp://guest:guest@localhost
 {{- else }}
 {{- if .Values.storage.internal.enabled }}
 {{- if and (not .Values.storage.internal.rootPassword) (not .Values.storage.internal.existingSecret) }}
@@ -75,8 +71,6 @@ IMPORTANT: This is a development deployment. For production use, you MUST change
 2. Collabora: username: {{ .Values.collaboration.collabora.admin.username }}, password: {{ .Values.collaboration.collabora.admin.password | default "<using existing secret>" }}
 {{- end }}
 {{- end }}
-3. OnlyOffice Database: sql.dbUser: onlyoffice, sql.dbPass: onlyoffice
-4. RabbitMQ: url: amqp://guest:guest@localhost
 {{- end }}
 
 Using default credentials in production environments poses significant security risks.
@@ -116,12 +110,6 @@ The following services have been deployed:
 {{- end }}
 {{- end }}
 
-{{- if .Values.collaboration.onlyoffice.enabled }}
-4. OnlyOffice Collaboration Service (built-in to OpenCloud):
-   - Service: {{ include "opencloud.opencloud.fullname" . }}
-   - HTTP Port: 9300
-   - gRPC Port: 9301
-{{- end }}
 
 
 {{- if .Values.httpRoute.enabled }}
@@ -137,9 +125,7 @@ Make sure the Gateway exists and is properly configured to accept traffic for th
 {{- if .Values.storage.internal.enabled }}
 - MinIO Console: {{ include "opencloud.minio.domain" . }} (Service: {{ include "opencloud.minio.fullname" . }}, Port: 9001)
 {{- end }}
-{{- if .Values.collaboration.onlyoffice.enabled }}
-- OnlyOffice WOPI: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.opencloud.fullname" . }}, Port: 9300)
-{{- end }}
+
 
 {{- else }}
 IMPORTANT: The HTTPRoutes are disabled. You need to configure your own ingress controller
@@ -152,9 +138,6 @@ Example domains for your ingress configuration:
 {{- end }}
 {{- if .Values.storage.internal.enabled }}
 - MinIO Console: {{ include "opencloud.minio.domain" . }} (Service: {{ include "opencloud.minio.fullname" . }}, Port: 9001)
-{{- end }}
-{{- if .Values.collaboration.onlyoffice.enabled }}
-- OnlyOffice WOPI: {{ .Values.global.domain.wopi }} (Service: {{ include "opencloud.opencloud.fullname" . }}, Port: 9300)
 {{- end }}
 {{- end }}
 
