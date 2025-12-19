@@ -35,11 +35,11 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      securityContext:
-        runAsUser: 104
-        runAsGroup: 101
-        fsGroup: 101
-        fsGroupChangePolicy: OnRootMismatch
+      # securityContext:
+      #   runAsUser: 104
+      #   runAsGroup: 101
+      #   fsGroup: 101
+      #   fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: collabora
           image: {{ include "opencloud.image" (dict "Chart" .Chart "imageValues" .Values.collaboration.collabora.image "global" .Values.global) | quote }}
