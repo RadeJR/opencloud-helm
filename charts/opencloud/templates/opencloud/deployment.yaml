@@ -272,9 +272,9 @@ spec:
             - name: nats
               containerPort: 9233
             {{- if or .Values.collaboration.collabora.enabled .Values.collaboration.external.enabled }}
-            - name: collaboration-http
+            - name: collab-http
               containerPort: 9300
-            - name: collaboration-grpc
+            - name: collab-grpc
               containerPort: 9301
             {{- end }}
           startupProbe:

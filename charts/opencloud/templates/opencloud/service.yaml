@@ -21,13 +21,13 @@ spec:
     {{- end }}
     {{- if or .Values.collaboration.collabora.enabled .Values.collaboration.external.enabled }}
     - port: 9300
-      targetPort: 9300
+      targetPort: collab-http
       protocol: TCP
-      name: collaboration-http
+      name: collab-http
     - port: 9301
-      targetPort: 9301
+      targetPort: collab-grpc
       protocol: TCP
-      name: collaboration-grpc
+      name: collab-grpc
     {{- end }}
   selector:
     {{- include "opencloud.selectorLabels" . | nindent 4 }}
