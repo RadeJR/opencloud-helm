@@ -212,13 +212,15 @@ identityProvider:
       password: ""
 
       # Resources allocation
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
+      # Resources allocation for PostgreSQL
+      resources: {}
+        # Example:
+        # requests:
+        #   cpu: 100m
+        #   memory: 128Mi
+        # limits:
+        #   cpu: 500m
+        #   memory: 512Mi
       
       # Persistence configuration
       persistence:
@@ -332,13 +334,15 @@ storage:
     region: "default"
     
     # Resources allocation
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
+    # Resources allocation for MinIO
+    resources: {}
+      # Example:
+      # requests:
+      #   cpu: 100m
+      #   memory: 256Mi
+      # limits:
+      #   cpu: 1000m
+      #   memory: 2Gi
     
     # Persistence configuration
     persistence:
@@ -490,13 +494,15 @@ collaboration:
       password: ""
     
     # Resources allocation for Collabora
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 1
-        memory: 1Gi
+    # Resources allocation for Collabora
+    resources: {}
+      # Example:
+      # requests:
+      #   cpu: 100m
+      #   memory: 256Mi
+      # limits:
+      #   cpu: 1
+      #   memory: 1Gi
     
     # Additional deployment annotations
     deploymentAnnotations: {}
@@ -603,13 +609,15 @@ tika:
     # Image pull policy
     pullPolicy: IfNotPresent
   # Resources allocation
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1Gi
-    limits:
-      cpu: 1000m
-      memory: 3Gi
+  # Resources allocation for Tika
+  resources: {}
+    # Example:
+    # requests:
+    #   cpu: 100m
+    #   memory: 1Gi
+    # limits:
+    #   cpu: 1000m
+    #   memory: 3Gi
 
 # Web Extensions settings
 webExtensions:
@@ -886,12 +894,14 @@ opencloud:
   # - secretRef:
   #     name: my-secret
   # Resources allocation
-  resources:
-    requests:
-      cpu: 128m
-      memory: 128Mi
-    limits:
-      memory: 20Gi
+  # Resources allocation for OpenCloud
+  resources: {}
+    # Example:
+    # requests:
+    #   cpu: 128m
+    #   memory: 128Mi
+    # limits:
+    #   memory: 20Gi
   
   # Pod scheduling configuration
   # Node selector for pod assignment
@@ -943,13 +953,15 @@ opencloud:
   dnsPolicy: ClusterFirst
   
   # Init container resource configuration
-  initResources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
+  # Resources allocation for init containers
+  initResources: {}
+    # Example:
+    # requests:
+    #   cpu: 10m
+    #   memory: 32Mi
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
   
   # Ingress configuration for OpenCloud
   ingress:
