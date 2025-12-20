@@ -24,8 +24,8 @@ data:
 {{- end }}
 
   # Proxy configuration
+{{- if .Values.opencloud.config.proxy.roleMappings }}
   proxy.yaml: |-
-{{- if .Values.opencloud.config.proxy.roleMappings -}}
     role_assignment:
       oidc_role_mapper:
         role_mapping:

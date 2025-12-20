@@ -316,9 +316,11 @@ spec:
             - name: config-files
               mountPath: /etc/opencloud/csp.yaml
               subPath: csp.yaml
+            {{- if .Values.opencloud.config.proxy.roleMappings }}
             - name: config-files
               mountPath: /etc/opencloud/proxy.yaml
               subPath: proxy.yaml
+            {{- end }}
             - name: config-files
               mountPath: /etc/opencloud/banned-password-list.txt
               subPath: banned-password-list.txt
