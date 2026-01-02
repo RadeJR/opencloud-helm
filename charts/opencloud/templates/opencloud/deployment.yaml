@@ -303,7 +303,7 @@ spec:
               mountPath: /etc/opencloud
             - name: data
               mountPath: /var/lib/opencloud
-            {{- if .Values.storage.posixfs.persistence.enabled }}
+            {{- if and .Values.storage.posixfs.enabled .Values.storage.posixfs.persistence.enabled }}
             - name: posixfs
               mountPath: {{ .Values.storage.posixfs.rootPath | default "/var/lib/opencloud/storage" | quote }}
             {{- end }}
@@ -354,7 +354,7 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        {{- if .Values.storage.posixfs.persistence.enabled }}
+        {{- if and .Values.storage.posixfs.enabled .Values.storage.posixfs.persistence.enabled }}
         - name: posixfs
           persistentVolumeClaim:
             {{- if .Values.storage.posixfs.persistence.existingClaim }}

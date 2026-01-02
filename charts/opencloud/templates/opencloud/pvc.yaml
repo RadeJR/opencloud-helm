@@ -41,7 +41,7 @@ spec:
   {{- end }}
 {{- end }}
 
-{{- if and .Values.storage.posixfs.persistence.enabled (not .Values.storage.posixfs.persistence.existingClaim) }}
+{{- if and .Values.storage.posixfs.persistence.enabled (and .Values.storage.posixfs.enabled (not .Values.storage.posixfs.persistence.existingClaim)) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
